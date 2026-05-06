@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Морской бой | Классическая игра против компьютера</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background: linear-gradient(145deg, #0a2f4a 0%, #05212e 100%);
+            font-family: 'Segoe UI', 'Roboto', 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* главный контейнер игры */
+        .game-container {
+            background: rgba(8, 28, 45, 0.7);
+            backdrop-filter: blur(2px);
+            border-radius: 3rem;
+            padding: 1.5rem;
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+            border: 1px solid rgba(72, 162, 202, 0.4);
+        }
+
+        /* две арены */
+        .boards-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 3rem;
+            margin-bottom: 1.8rem;
+        }
+
+        .board-card {
+            background: #021018;
+            border-radius: 2rem;
+            padding: 1rem 1rem 1.2rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(84, 184, 224, 0.3);
+            transition: transform 0.2s;
+        }
+
+        .board-card:hover {
+            transform: scale(1.01);
+        }
+
+        .board-title {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+            color: #c0e4ff;
+            text-shadow: 0 2px 3px #00000050;
+            background: #0a2a36;
+            display: inline-block;
+            width: 100%;
+            border-radius: 3rem;
+            padding: 0.3rem 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* игровая сетка — CSS Grid адаптив */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(10, 34px);
+            grid-template-rows: repeat(10, 34px);
+            gap: 2px;
+            background-color: #1a4b6e;
+            padding: 6px;
+            border-radius: 18px;
+            box-shadow: inset 0 0 0 2px #2f6a8a, 0 8px 12px rgba(0,0,0,0.3);
+        }
+
+        /* стиль клеток */
+        .cell {
+            background-color: #2c6d93;
+            border-radius: 6px;
+            transition: all 0.07s linear;
+            cursor: pointer;
+            box-shadow: inset 0 1px 1px rgba(255,255,255,0.2), 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        /* отображение кораблей на поле ИГРОКА (видимые) */
+        .player-ship {
+            background: linear-gradient(145deg, #5f8e5c, #3e6b3a);
+            box-shadow: inset 0 1px 3px #b5e0a0, 0 1px 2px black;
+            position: relative;
+        }
+        .player-ship::after {
+            content: "⚓";
+            font-size: 14px;
+            color: #ebc88b;
+            text-shadow: 0 0 2px black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            opacity: 0.7;
+        }
+
+        /* попадание */
+        .hit {
+            background: radial-gradient(circle, #d64545, #9e2a2a);
+            box-shadow: inset 0 0 0 1px #ff8a5c, 0 0 6px red;
+            position: relative;
+        }
+        .hit::after {
+            content: "💥";
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-weight: bold;
+            filter: drop-shadow(0 0 2px white);
+        }
+
+        /* промах */
+        .miss {
+            background: #1c4e6e;
+            position: relative;
+        }
+        .miss::after {
+            content: "•";
+            font-size: 24px;
+            color: #b3e4ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            opacity: 0.9;
+            text-shadow: 0 0 2px #0a2a3a;
+        }
+
+        /* вражеская сетка — не показываем корабли */
+        .cell.enemy-cell {
+            background-color: #226088;
+        }
+
+        /* подсветка при наведении на активную клетку */
+        .cell:active {
+            transform: scale(0.96);
+        }
+
+        .cell.enemy-cell:not(.hit):not(.miss):hover {
+            background-color: #3e88b0;
+            cursor: crosshair;
+            box-shadow: 0 0 0 2px #ffdd99;
+        }
+
+        /* панель управления */
+        .info-panel {
+            background: #041e2bdd;
+            backdrop-filter: blur(8px);
+            border-radius: 3rem;
+            padding: 0.8rem 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: 0.5rem;
+            border: 1px solid #48a2ca;
+        }
+
+        .turn-indicator {
+            background: #00000099;
+            padding: 0.4rem 1.2rem;
+            border-radius: 3rem;
+            font-weight: bold;
+            font-size: 1.2rem;
+            font-family: monospace;
+            letter-spacing: 1px;
+            box-shadow: inset 0 0 4px #00b7ff, 0 2px 5px black;
+        }
+
+        .turn-text {
+            color: #ffd966;
+            text-shadow: 0 0 3px #ff9900;
+        }
+
+        .message-area {
+            background: #0a1f29;
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
+            min-width: 200px;
+            text-align: center;
+            color: #bbe1f0;
+            font-weight: bold;
+            font-size: 1rem;
+            font-family: 'Segoe UI', monospace;
+            box-shadow: inset 0 0 6px #2d6d8f, 0 1px 2px black;
+        }
+
+        button {
+            background: #2d7350;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: bold;
+            padding: 0.5rem 1.3rem;
+            border-radius: 3rem;
+            color: #f0f9ff;
+            cursor: pointer;
+            transition: 0.1s linear;
+            font-family: monospace;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 0 #1a3a2a;
+        }
+
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #1a3a2a;
+        }
+
+        footer {
+            font-size: 11px;
+            text-align: center;
+            color: #79b8d4;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 780px) {
+            .grid { grid-template-columns: repeat(10, 28px); grid-template-rows: repeat(10, 28px); gap: 2px; }
+            .board-card { padding: 0.6rem; }
+            .turn-indicator { font-size: 0.9rem;}
+            .message-area { font-size: 0.75rem; min-width: 150px;}
+        }
+        @media (max-width: 620px) {
+            .grid { grid-template-columns: repeat(10, 24px); grid-template-rows: repeat(10, 24px); }
+            .hit::after { font-size: 14px;}
+            .miss::after { font-size: 18px;}
+            .player-ship::after { font-size: 11px;}
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div class="game-container">
+        <div class="boards-wrapper">
+            <!-- Поле игрока (видимые корабли) -->
+            <div class="board-card">
+                <div class="board-title">⚔️ ВАШ ФЛОТ ⚔️</div>
+                <div id="player-grid" class="grid"></div>
+            </div>
+            <!-- Поле противника (скрытые корабли) -->
+            <div class="board-card">
+                <div class="board-title">🎯 ФЛОТ ВРАГА 🎯</div>
+                <div id="computer-grid" class="grid"></div>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <div class="turn-indicator">
+                🔄 ХОД: <span id="turn-label" class="turn-text">ИГРОК</span>
+            </div>
+            <div class="message-area" id="game-message">
+                🔥 Нажми на клетку врага!
+            </div>
+            <button id="reset-game">🔄 НОВАЯ ИГРА</button>
+        </div>
+        <footer>Правила: попадание = дополнительный ход. Уничтожь все корабли противника 💣</footer>
+    </div>
+</div>
+
+<script>
+    // ---------- КОНФИГУРАЦИЯ ----------
+    const BOARD_SIZE = 10;
+    // классический набор: 1 четырёхпалубный, 2 трёхпалубных, 3 двухпалубных, 4 однопалубных
+    const SHIP_LENGTHS = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1];
+    const TOTAL_SHIPS = SHIP_LENGTHS.length;
+
+    // Глобальное состояние игры
+    let gameActive = true;          // активна ли игра (не закончена)
+    let currentTurn = "player";    // "player" или "computer"
+    let playerShips = [];            // массив объектов кораблей игрока
+    let computerShips = [];          // корабли ИИ
+    let playerGrid = [];             // 10x10 { ship: id|null, shot: bool }
+    let computerGrid = [];            // 10x10 { ship: id|null, shot: bool }
+    let computerTimeout = null;       // таймаут хода компьютера
+    let isComputerThinking = false;   // блокировка повторных ходов ИИ
+
+    // для рендеринга
+    const playerGridContainer = document.getElementById("player-grid");
+    const computerGridContainer = document.getElementById("computer-grid");
+    const turnLabelSpan = document.getElementById("turn-label");
+    const messageDiv = document.getElementById("game-message");
+
+    // ---------- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ----------
+    function showMessage(msg, isError = false) {
+        messageDiv.innerHTML = msg;
+        messageDiv.style.color = isError ? "#ffa098" : "#bbe1f0";
+        setTimeout(() => {
+            if (messageDiv.innerHTML === msg) messageDiv.style.color = "#bbe1f0";
+        }, 1800);
+    }
+
+    // обновить текст хода
+    function updateUITurn() {
+        turnLabelSpan.innerText = currentTurn === "player" ? "ВАШ ХОД" : "ХОД КОМПЬЮТЕРА";
+        turnLabelSpan.style.color = currentTurn === "player" ? "#ffe484" : "#ffaa77";
+    }
+
+    // инициализация пустых сеток
+    function initEmptyGrid() {
+        const grid = [];
+        for (let i = 0; i < BOARD_SIZE; i++) {
+            grid[i] = [];
+            for (let j = 0; j < BOARD_SIZE; j++) {
+                grid[i][j] = { ship: null, shot: false };
+            }
+        }
+        return grid;
+    }
+
+    // проверка возможности размещения корабля на сетке
+    function canPlaceShip(grid, row, col, length, orientation) {
+        if (orientation === 'horizontal') {
+            if (col + length > BOARD_SIZE) return false;
+            for (let c = col; c < col + length; c++) {
+                if (grid[row][c].ship !== null) return false;
+            }
+        } else {
+            if (row + length > BOARD_SIZE) return false;
+            for (let r = row; r < row + length; r++) {
+                if (grid[r][col].ship !== null) return false;
+            }
+        }
+        return true;
+    }
+
+    // размещение корабля на сетке (запись shipId)
+    function placeShipOnGrid(grid, shipId, positions) {
+        for (let pos of positions) {
+            grid[pos.row][pos.col].ship = shipId;
+        }
+    }
+
+    // генерация случайных кораблей для стороны
+    function generateRandomShips(shipLengths, gridSize) {
+        const grid = initEmptyGrid();
+        const ships = [];
+        let shipId = 0;
+
+        for (let len of shipLengths) {
+            let placed = false;
+            let attempts = 0;
+            while (!placed && attempts < 2000) {
+                const orientation = Math.random() < 0.5 ? 'horizontal' : 'vertical';
+                const row = Math.floor(Math.random() * gridSize);
+                const col = Math.floor(Math.random() * gridSize);
+                if (canPlaceShip(grid, row, col, len, orientation)) {
+                    // собираем позиции
+                    const positions = [];
+                    if (orientation === 'horizontal') {
+                        for (let i = 0; i < len; i++) positions.push({ row, col: col + i });
+                    } else {
+                        for (let i = 0; i < len; i++) positions.push({ row: row + i, col });
+                    }
+                    const shipObj = {
+                        id: shipId,
+                        length: len,
+                        hits: 0,
+                        positions: positions,
+                        sunk: false
+                    };
+                    ships.push(shipObj);
+                    placeShipOnGrid(grid, shipId, positions);
+                    shipId++;
+                    placed = true;
+                }
+                attempts++;
+            }
+            if (!placed) {
+                // аварийное падение - просто втупую по строкам (почти никогда не случается)
+                for (let r = 0; r < gridSize && !placed; r++) {
+                    for (let c = 0; c <= gridSize - len; c++) {
+                        if (canPlaceShip(grid, r, c, len, 'horizontal')) {
+                            const positions = [];
+                            for (let i = 0; i < len; i++) positions.push({ row: r, col: c + i });
+                            const shipObj = { id: shipId, length: len, hits: 0, positions: positions, sunk: false };
+                            ships.push(shipObj);
+                            placeShipOnGrid(grid, shipId, positions);
+                            shipId++;
+                            placed = true;
+                            break;
+                        }
+                    }
+                    if (placed) break;
+                }
+            }
+        }
+        return { grid, ships };
+    }
+
+    // Получить корабль по ID из массива кораблей
+    function getShipById(shipsArray, shipId) {
+        return shipsArray.find(s => s.id === shipId);
+    }
+
+    // Проверить потоплен ли корабль (обновить статус sunk)
+    function updateShipSunkStatus(ship) {
+        if (ship.hits === ship.length && !ship.sunk) {
+            ship.sunk = true;
+            return true; // только что потоплен
+        }
+        return false;
+    }
+
+    // Проверить все ли корабли уничтожены
+    function allShipsSunk(shipsArray) {
+        return shipsArray.length > 0 && shipsArray.every(ship => ship.hits === ship.length);
+    }
+
+    // обработка попадания по цели (универсальная логика увеличения хитов и проверки потопления)
+    function processHit(shipsArray, shipId, gridCoords, isPlayerSide) {
+        const ship = getShipById(shipsArray, shipId);
+        if (!ship || ship.sunk) return false;
+        ship.hits++;
+        const justSunk = updateShipSunkStatus(ship);
+        if (justSunk) {
+            const sideName = isPlayerSide ? "Ваш корабль" : "Вражеский корабль";
+            showMessage(`💢 ${sideName} потоплен! (длина ${ship.length})`, false);
+        } else {
+            showMessage(`🎯 Попадание!`, false);
+        }
+        return justSunk;
+    }
+
+    // завершение игры
+    function endGame(winner) {
+        gameActive = false;
+        if (winner === "player") {
+            showMessage("🏆 ПОБЕДА! Вы уничтожили весь флот противника! 🏆", false);
+            turnLabelSpan.innerText = "ПОБЕДА!";
+        } else {
+            showMessage("💀 ПОРАЖЕНИЕ... Ваш флот уничтожен. Попробуйте еще раз! 💀", false);
+            turnLabelSpan.innerText = "ПОРАЖЕНИЕ";
+        }
+        if (computerTimeout) clearTimeout(computerTimeout);
+        isComputerThinking = false;
+    }
+
+    // рендер обоих полей
+    function renderBoards() {
+        // отрисовка поля игрока (видно корабли, попадания, промахи)
+        playerGridContainer.innerHTML = "";
+        for (let i = 0; i < BOARD_SIZE; i++) {
+            for (let j = 0; j < BOARD_SIZE; j++) {
+                const cell = playerGrid[i][j];
+                const cellDiv = document.createElement("div");
+                cellDiv.classList.add("cell");
+                if (cell.shot) {
+                    // был выстрел компьютера или игрока по своему? По полю игрока стрелял компьютер
+                    if (cell.ship !== null) {
+                        cellDiv.classList.add("hit");
+                    } else {
+                        cellDiv.classList.add("miss");
+                    }
+                } else {
+                    if (cell.ship !== null) {
+                        cellDiv.classList.add("player-ship"); // показываем корабли игрока
+                    } else {
+                        // обычная вода
+                        cellDiv.style.background = "#2c6d93";
+                    }
+                }
+                playerGridContainer.appendChild(cellDiv);
+            }
+        }
+
+        // отрисовка поля компьютера (скрытые корабли, показываем только выстрелы игрока)
+        computerGridContainer.innerHTML = "";
+        for (let i = 0; i < BOARD_SIZE; i++) {
+            for (let j = 0; j < BOARD_SIZE; j++) {
+                const cell = computerGrid[i][j];
+                const cellDiv = document.createElement("div");
+                cellDiv.classList.add("cell", "enemy-cell");
+                if (cell.shot) {
+                    if (cell.ship !== null) {
+                        cellDiv.classList.add("hit");
+                    } else {
+                        cellDiv.classList.add("miss");
+                    }
+                } else {
+                    // не обстрелянная клетка – водная гладь
+                    cellDiv.style.background = "#226088";
+                }
+                // добавим обработчик клика для вражеской сетки (если игра активна и ход игрока)
+                cellDiv.addEventListener("click", (function(row, col) {
+                    return function() { onPlayerAttack(row, col); };
+                })(i, j));
+                computerGridContainer.appendChild(cellDiv);
+            }
+        }
+        updateUITurn();
+    }
+
+    // АТАКА ИГРОКА по координатам (row, col) на поле компьютера
+    function onPlayerAttack(row, col) {
+        if (!gameActive) {
+            showMessage("Игра окончена. Нажми 'Новая игра'", true);
+            return;
+        }
+        if (currentTurn !== "player") {
+            showMessage("Сейчас ход компьютера, подождите...", true);
+            return;
+        }
+        if (isComputerThinking) {
+            showMessage("Компьютер думает, секунду...", true);
+            return;
+        }
+        const targetCell = computerGrid[row][col];
+        if (targetCell.shot) {
+            showMessage("Сюда уже стреляли! Выберите другую клетку.", true);
+            return;
+        }
+
+        // совершаем выстрел
+        targetCell.shot = true;
+        const isHit = (targetCell.ship !== null);
+        let shipSunk = false;
+        let gameEnded = false;
+
+        if (isHit) {
+            const shipId = targetCell.ship;
+            // обрабатываем попадание по кораблю компьютера
+            shipSunk = processHit(computerShips, shipId, {row, col}, false);
+            // проверка: все ли корабли противника уничтожены?
+            if (allShipsSunk(computerShips)) {
+                endGame("player");
+                gameEnded = true;
+                renderBoards();
+                return;
+            }
+        } else {
+            showMessage("💧 Промах!", false);
+        }
+
+        renderBoards();
+
+        // логика дополнительного хода: если попал (даже если потопил) - ход остается игроку
+        if (isHit) {
+            currentTurn = "player";
+            updateUITurn();
+            showMessage(`🎯 Попадание! Ещё один выстрел!`, false);
+            // рендер и выход - игрок продолжает
+            renderBoards();
+            return;
+        } else {
+            // промах -> передача хода компьютеру
+            currentTurn = "computer";
+            updateUITurn();
+            renderBoards();
+            if (!gameEnded && gameActive) {
+                startComputerTurn();
+            }
+        }
+    }
+
+    // ХОД КОМПЬЮТЕРА (умный: стреляет по случайной необстрелянной клетке игрока)
+    async function startComputerTurn() {
+        if (!gameActive) return;
+        if (currentTurn !== "computer") return;
+        if (isComputerThinking) return;
+        isComputerThinking = true;
+
+        // небольшая задержка для реалистичности
+        if (computerTimeout) clearTimeout(computerTimeout);
+        computerTimeout = setTimeout(() => {
+            performComputerMove();
+        }, 260);
+    }
+
+    function performComputerMove() {
+        if (!gameActive || currentTurn !== "computer") {
+            isComputerThinking = false;
+            return;
+        }
+
+        // собираем все необстрелянные клетки на поле игрока
+        let availableCells = [];
+        for (let i = 0; i < BOARD_SIZE; i++) {
+            for (let j = 0; j < BOARD_SIZE; j++) {
+                if (!playerGrid[i][j].shot) {
+                    availableCells.push({ row: i, col: j });
+                }
+            }
+        }
+
+        if (availableCells.length === 0) {
+            // нет ходов - победа компьютера (весь флот игрока непотоплен? но выстрелов нет)
+            if (!allShipsSunk(playerShips)) {
+                // странный случай, но формально компьютер не может стрелять
+                endGame("computer");
+            }
+            isComputerThinking = false;
+            renderBoards();
+            return;
+        }
+
+        // выбираем случайную клетку
+        const randomIndex = Math.floor(Math.random() * availableCells.length);
+        const { row, col } = availableCells[randomIndex];
+        const targetCell = playerGrid[row][col];
+        targetCell.shot = true;
+        const isHit = (targetCell.ship !== null);
+        let shipSunkFlag = false;
+
+        if (isHit) {
+            const shipId = targetCell.ship;
+            shipSunkFlag = processHit(playerShips, shipId, {row, col}, true);
+            // проверить не уничтожен ли весь флот игрока
+            if (allShipsSunk(playerShips)) {
+                renderBoards();
+                endGame("computer");
+                isComputerThinking = false;
+                return;
+            }
+            showMessage(`🤖 Компьютер попал! ${shipSunkFlag ? "Корабль уничтожен!" : ""}`, false);
+        } else {
+            showMessage(`💨 Компьютер промахнулся!`, false);
+        }
+
+        renderBoards();
+
+        // правильное правило: если попал - компьютер ходит еще раз (атакует повторно)
+        if (isHit) {
+            currentTurn = "computer";
+            updateUITurn();
+            renderBoards();
+            // продолжаем ход компьютера (еще один выстрел)
+            if (gameActive && currentTurn === "computer") {
+                // рекурсивный вызов после короткой задержки
+                if (computerTimeout) clearTimeout(computerTimeout);
+                computerTimeout = setTimeout(() => {
+                    performComputerMove();
+                }, 280);
+                return;
+            } else {
+                isComputerThinking = false;
+            }
+        } else {
+            // промах: передаем ход игроку
+            currentTurn = "player";
+            updateUITurn();
+            renderBoards();
+            isComputerThinking = false;
+            if (computerTimeout) clearTimeout(computerTimeout);
+        }
+
+        if (!gameActive) {
+            isComputerThinking = false;
+            if (computerTimeout) clearTimeout(computerTimeout);
+        }
+    }
+
+    // ---------- НОВАЯ ИГРА (полный сброс) ----------
+    function newGame() {
+        // отменяем все таймауты компьютера
+        if (computerTimeout) {
+            clearTimeout(computerTimeout);
+            computerTimeout = null;
+        }
+        isComputerThinking = false;
+        gameActive = true;
+        currentTurn = "player";
+
+        // генерируем корабли для игрока
+        const playerGeneration = generateRandomShips(SHIP_LENGTHS, BOARD_SIZE);
+        playerGrid = playerGeneration.grid;
+        playerShips = playerGeneration.ships;
+
+        // генерируем корабли для компьютера
+        const computerGeneration = generateRandomShips(SHIP_LENGTHS, BOARD_SIZE);
+        computerGrid = computerGeneration.grid;
+        computerShips = computerGeneration.ships;
+
+        // валидация: если чего-то не хватает — доп. страховка (повтор)
+        if (playerShips.length !== TOTAL_SHIPS || computerShips.length !== TOTAL_SHIPS) {
+            // перестраховка: регенерируем еще раз (редкий баг)
+            const regenPlayer = generateRandomShips(SHIP_LENGTHS, BOARD_SIZE);
+            playerGrid = regenPlayer.grid;
+            playerShips = regenPlayer.ships;
+            const regenComp = generateRandomShips(SHIP_LENGTHS, BOARD_SIZE);
+            computerGrid = regenComp.grid;
+            computerShips = regenComp.ships;
+        }
+
+        showMessage("🛳️ Новая игра! Ваш ход. Уничтожьте флот врага!", false);
+        renderBoards();
+        updateUITurn();
+    }
+
+    // сброс по кнопке
+    document.getElementById("reset-game").addEventListener("click", () => {
+        if (computerTimeout) clearTimeout(computerTimeout);
+        isComputerThinking = false;
+        newGame();
+    });
+
+    // инициализация самой первой игры
+    newGame();
+</script>
+</body>
+</html>
