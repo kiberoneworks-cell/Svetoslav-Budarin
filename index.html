@@ -69,7 +69,7 @@
             flex-wrap: wrap;
             justify-content: center;
             gap: 2.5rem;
-            padding: 2.8rem 1.8rem;
+            padding: 2.8rem 1.8rem 1.8rem;
         }
 
         .game-card {
@@ -143,6 +143,81 @@
             letter-spacing: 0.5px;
         }
 
+        /* секция разработчика */
+        .developer-section {
+            margin: 1.5rem 2rem 2rem 2rem;
+            padding: 1.8rem 2rem;
+            background: rgba(0, 20, 30, 0.8);
+            backdrop-filter: blur(8px);
+            border-radius: 2rem;
+            border: 1px solid #ffb34766;
+            box-shadow: 0 12px 28px rgba(0,0,0,0.4);
+            transition: all 0.2s;
+        }
+        .developer-section:hover {
+            border-color: #ffcd7e;
+            background: rgba(3, 30, 42, 0.9);
+        }
+        .dev-title {
+            font-size: 1.7rem;
+            font-weight: 800;
+            color: #ffe2b0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 1rem;
+            border-left: 5px solid #ffb347;
+            padding-left: 20px;
+        }
+        .dev-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .dev-text {
+            flex: 2;
+            min-width: 200px;
+        }
+        .dev-text p {
+            color: #d0e6ff;
+            line-height: 1.5;
+            margin-bottom: 0.8rem;
+            font-size: 1rem;
+        }
+        .dev-signature {
+            font-family: monospace;
+            color: #ffcf7e;
+            font-weight: bold;
+            font-size: 1.15rem;
+            letter-spacing: 1px;
+            margin-top: 0.5rem;
+        }
+        .dev-stats {
+            flex: 1;
+            background: #02131db3;
+            border-radius: 1.8rem;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            border: 1px solid #ffbc6e55;
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #ffcd7e;
+        }
+        .stat-label {
+            font-size: 0.8rem;
+            color: #b5d8ff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        hr {
+            border-color: #ffbc6e30;
+            margin: 1rem 0;
+        }
+
         /* футер */
         .footer-note {
             text-align: center;
@@ -163,12 +238,15 @@
 
         @media (max-width: 850px) {
             .games-grid { gap: 1.8rem; }
+            .developer-section { margin: 1rem; padding: 1.2rem; }
+            .dev-content { flex-direction: column; }
         }
         @media (max-width: 650px) {
             .games-grid { gap: 1.5rem; padding: 1.8rem; }
             .game-card { width: 260px; }
             .card-info h2 { font-size: 1.5rem; }
             .portal-header h1 { font-size: 1.8rem; }
+            .dev-title { font-size: 1.3rem; }
         }
         @media (max-width: 580px) {
             .game-card { width: 100%; max-width: 320px; }
@@ -228,9 +306,34 @@
         </a>
     </div>
 
+    <!-- ========= БЛОК РАЗРАБОТЧИКА ========= -->
+    <div class="developer-section">
+        <div class="dev-title">
+            👨‍💻 О РАЗРАБОТЧИКЕ
+        </div>
+        <div class="dev-content">
+            <div class="dev-text">
+                <p>✨ <strong>Светослав</strong> — создатель всех трёх игр, представленных на этом портале. Более 2 лет он разрабатывает интерактивные веб-проекты, сочетая креативный дизайн, чистый код и игровую физику. Каждая игра продумана до мелочей: от анимаций до сбалансированной сложности.</p>
+                <p>🎯 За плечами Светослава <strong>десятки завершённых проектов</strong>: аркады, головоломки, стратегии и даже небольшие RPG. Он постоянно экспериментирует с новыми технологиями (Canvas, CSS-анимации, адаптивный JavaScript), чтобы каждая игра была увлекательной и работала на любом устройстве.</p>
+                <p>⭐ <strong>Почему стоит играть?</strong> Все проекты Светослава — это авторский код без шаблонов, живая обратная связь от игроков и постоянные обновления. Скоро выйдут новые игры: "Космический рейнджер", "Магический пазл" и многопользовательский режим.</p>
+                <div class="dev-signature">— Светослав, геймдизайнер и full‑stack энтузиаст</div>
+            </div>
+            <div class="dev-stats">
+                <div class="stat-number">🔥 30+</div>
+                <div class="stat-label">законченных проектов</div>
+                <hr>
+                <div class="stat-number">🎮 3</div>
+                <div class="stat-label">игры в этом портале</div>
+                <hr>
+                <div class="stat-number">⚡ 8.9K</div>
+                <div class="stat-label">строк чистого кода</div>
+            </div>
+        </div>
+    </div>
+
     <div class="footer-note">
         🧭 Убедитесь, что файлы <strong>ship-fight.html</strong>, <strong>Rock-scissors-paper.html</strong> и <strong>WORDLY.html</strong> находятся в одной папке с этим меню.<br>
-        Все игры запускаются отдельно — кликайте на карточки!
+        Все игры созданы Светославом — наслаждайтесь и возвращайтесь за новыми проектами!
     </div>
 </div>
 </body>
