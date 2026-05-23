@@ -3,8 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Камень, ножницы, бумага | Игра против компьютера</title>
+    <title>Камень, ножницы, бумага | Игровой портал</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-color-1: #0f172a;
+            --bg-color-2: #1e1b4b;
+            --bg-color-3: #312e81;
+            --glass-bg: rgba(20, 25, 45, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --primary: #818cf8;
+            --accent: #f472b6;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --win-color: #34d399; /* Изумрудный для победы */
+            --lose-color: #fb7185; /* Розовый для поражения */
+        }
+
+        /* ===== Общие сбросы ===== */
         * {
             margin: 0;
             padding: 0;
@@ -14,274 +31,354 @@
 
         body {
             min-height: 100vh;
-            background: linear-gradient(135deg, #1a2639, #2a3b4c);
-            font-family: 'Segoe UI', 'Poppins', 'Courier New', monospace;
+            font-family: 'Poppins', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 1.5rem;
+            position: relative;
+            color: var(--text-main);
+            /* Анимированный градиентный фон */
+            background: linear-gradient(-45deg, var(--bg-color-1), var(--bg-color-2), var(--bg-color-3), #170f2a);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            overflow-x: hidden;
         }
 
-        /* главная карточка */
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Декоративные круги на фоне */
+        body::before, body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: 0;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        body::before {
+            width: 400px; height: 400px;
+            background: var(--primary);
+            top: -100px; left: -100px;
+        }
+        body::after {
+            width: 300px; height: 300px;
+            background: var(--accent);
+            bottom: -50px; right: -50px;
+        }
+
+        /* ===== Главный контейнер ===== */
         .game-card {
-            max-width: 800px;
             width: 100%;
-            background: rgba(15, 30, 45, 0.75);
-            backdrop-filter: blur(12px);
-            border-radius: 3rem;
-            box-shadow: 0 25px 45px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,215,150,0.4);
-            overflow: hidden;
-            transition: all 0.2s;
+            max-width: 800px;
+            position: relative;
+            z-index: 10;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 2rem;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            padding: 2.5rem;
+            animation: fadeIn 0.6s ease-out;
         }
 
-        /* шапка */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* ===== Кнопка назад ===== */
+        .header-actions {
+            margin-bottom: 1rem;
+        }
+        .back-button {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            font-size: 0.9rem;
+            text-decoration: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 2rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            transform: translateX(-5px);
+        }
+
+        /* ===== Шапка ===== */
         .game-header {
-            background: #0a121cee;
-            padding: 1.2rem 1rem;
             text-align: center;
-            border-bottom: 1px solid #ffd966;
+            margin-bottom: 2rem;
         }
         .game-header h1 {
-            font-size: 2rem;
-            letter-spacing: 3px;
-            color: #ffecb3;
-            text-shadow: 0 4px 10px #ff9500;
+            font-size: 2.5rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: linear-gradient(to right, #a78bfa, #f472b6, #fb7185);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 15px;
             flex-wrap: wrap;
         }
-        .game-header h1 span {
-            font-size: 2rem;
-        }
-        .sub {
-            color: #b9d8ff;
-            margin-top: 6px;
-            font-weight: 500;
+        .game-header .sub {
+            color: var(--text-muted);
             font-size: 1rem;
+            font-weight: 500;
         }
 
-        /* секция счета */
+        /* ===== Секция счета ===== */
         .scoreboard {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-            background: #00000066;
-            margin: 1.5rem 1.8rem;
-            padding: 1rem 1.8rem;
-            border-radius: 5rem;
-            backdrop-filter: blur(4px);
-            border: 1px solid #ffd58c;
-            gap: 1rem;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
             flex-wrap: wrap;
         }
         .score-card {
-            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            padding: 1rem 2rem;
+            border-radius: 1.5rem;
             text-align: center;
-            background: #09161f;
-            padding: 0.6rem 0.4rem;
-            border-radius: 2.5rem;
-            box-shadow: inset 0 1px 3px #2e6a8a, 0 5px 12px black;
+            min-width: 140px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
         }
         .score-label {
-            font-size: 1rem;
+            font-size: 0.85rem;
             text-transform: uppercase;
-            color: #c0e0ff;
+            color: var(--text-muted);
             letter-spacing: 1px;
+            margin-bottom: 0.5rem;
         }
         .score-value {
             font-size: 3rem;
             font-weight: 800;
-            color: #ffd966;
+            color: var(--primary);
             line-height: 1;
-            text-shadow: 0 2px 5px #a45800;
+        }
+        #computer-score {
+            color: var(--accent);
         }
         .versus-badge {
-            font-size: 2rem;
-            font-weight: bold;
-            background: #dd8833;
-            width: 60px;
-            height: 60px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            width: 50px;
+            height: 50px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50%;
-            background: radial-gradient(circle, #ffb347, #ff7e05);
-            color: #2a1e0c;
-            box-shadow: 0 0 12px gold;
-            font-family: monospace;
+            color: #fff;
+            box-shadow: 0 0 15px rgba(244, 114, 182, 0.4);
         }
 
-        /* зона выбора хода */
+        /* ===== Зона выбора ===== */
         .game-arena {
-            background: #051e2ad9;
-            margin: 0 1.2rem 1.5rem;
-            border-radius: 2.5rem;
-            padding: 1.5rem 1rem;
             display: flex;
-            justify-content: space-between;
-            gap: 20px;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
             flex-wrap: wrap;
-            border: 1px solid rgba(255, 200, 100, 0.5);
         }
         .choice-panel {
-            flex: 1;
             text-align: center;
-            min-width: 140px;
+            flex: 1;
+            min-width: 150px;
         }
         .choice-label {
-            font-size: 1.2rem;
-            font-weight: bold;
-            background: #00000077;
-            display: inline-block;
-            padding: 0.3rem 1.2rem;
-            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-muted);
             margin-bottom: 1rem;
-            color: #ffde9e;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
+            display: inline-block;
         }
         .choice-icon {
-            font-size: 5.5rem;
-            background: #0b2c3b;
-            border-radius: 3rem;
-            padding: 0.8rem;
-            box-shadow: 0 12px 20px rgba(0,0,0,0.4), inset 0 1px 2px white;
-            transition: 0.1s linear;
-            display: inline-block;
-            width: 130px;
-            text-align: center;
-        }
-        .choice-icon span {
-            filter: drop-shadow(2px 4px 8px black);
-        }
-        .result-area {
-            text-align: center;
-            background: #010f17aa;
-            padding: 1rem;
+            font-size: 5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
             border-radius: 2rem;
-            margin: 0 1.8rem 1.2rem;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #ffefb9;
+            width: 140px;
+            height: 140px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-            border-left: 5px solid #ffa559;
-            border-right: 5px solid #ffa559;
+            margin: 0 auto;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+            transition: all 0.3s;
         }
-        .round-result {
-            background: #00000099;
-            padding: 0.5rem 1.2rem;
-            border-radius: 3rem;
-            font-size: 1.3rem;
+        .choice-icon span {
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3));
         }
 
-        /* кнопки выбора */
+        /* ===== Зона результатов ===== */
+        .result-area {
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        .round-result {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            padding: 0.8rem 1.5rem;
+            border-radius: 2rem;
+            font-size: 1.1rem;
+            font-weight: 500;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        /* Динамические классы для результатов */
+        .round-result.win {
+            border-color: var(--win-color);
+            background: rgba(52, 211, 153, 0.1);
+            box-shadow: 0 0 15px rgba(52, 211, 153, 0.2);
+            color: var(--win-color);
+        }
+        .round-result.lose {
+            border-color: var(--lose-color);
+            background: rgba(251, 113, 133, 0.1);
+            box-shadow: 0 0 15px rgba(251, 113, 133, 0.2);
+            color: var(--lose-color);
+        }
+        .round-result.draw {
+            border-color: var(--text-muted);
+            color: var(--text-main);
+        }
+
+        /* ===== Кнопки действий ===== */
         .action-buttons {
             display: flex;
             justify-content: center;
-            gap: 1.2rem;
+            gap: 1rem;
             flex-wrap: wrap;
-            margin: 1rem 1.8rem 2rem;
         }
         .game-btn {
-            background: #253b49;
-            border: none;
-            font-size: 2.2rem;
-            padding: 0.8rem 1.2rem;
-            border-radius: 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            font-family: inherit;
+            padding: 1rem 1.5rem;
+            border-radius: 1.5rem;
             cursor: pointer;
-            transition: all 0.15s ease;
-            box-shadow: 0 6px 0 #0f222e;
+            transition: all 0.3s;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 6px;
-            min-width: 100px;
-            font-weight: bold;
-            color: #f7eac5;
+            gap: 8px;
+            min-width: 120px;
         }
-        .game-btn span:first-child {
-            font-size: 2.5rem;
-        }
-        .game-btn span:last-child {
-            font-size: 0.9rem;
-            letter-spacing: 1px;
-        }
-        .game-btn:active {
-            transform: translateY(3px);
-            box-shadow: 0 2px 0 #0f222e;
-        }
-        .reset-btn {
-            background: #6d4c2c;
-            box-shadow: 0 6px 0 #3e2a18;
-            color: #ffeaac;
-        }
+        .game-btn span:first-child { font-size: 2rem; }
+        .game-btn span:last-child { font-size: 0.9rem; font-weight: 600; letter-spacing: 1px; }
+        
         .game-btn:hover {
-            background: #2f526b;
-            transform: scale(0.98);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3), 0 0 15px rgba(129, 140, 248, 0.3);
+        }
+        .game-btn:active { transform: translateY(0); }
+
+        .reset-btn {
+            background: linear-gradient(135deg, #f43f5e, #e11d48);
+            border: none;
+            justify-content: center;
+        }
+        .reset-btn:hover {
+            background: linear-gradient(135deg, #fb7185, #be123c);
+            border-color: transparent;
+            box-shadow: 0 10px 20px rgba(225, 29, 72, 0.4);
         }
 
-        /* анимация пульсации */
+        /* Анимация пульсации */
         @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.9; }
-            100% { transform: scale(1.08); opacity: 1; }
+            0% { transform: scale(1); box-shadow: inset 0 0 20px rgba(0,0,0,0.2); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(255,255,255,0.2), inset 0 0 20px rgba(0,0,0,0.2); }
+            100% { transform: scale(1); box-shadow: inset 0 0 20px rgba(0,0,0,0.2); }
         }
         .choice-icon.pulse {
-            animation: pulse 0.25s ease-in-out 2;
+            animation: pulse 0.3s ease-in-out 2;
         }
 
         footer {
             text-align: center;
-            font-size: 0.7rem;
-            padding: 0.9rem;
-            color: #87b9d6;
-            border-top: 1px solid #3b6e8b;
-            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            color: rgba(148, 163, 184, 0.6);
+            border-top: 1px solid var(--glass-border);
         }
 
-        @media (max-width: 560px) {
-            .choice-icon { width: 90px; font-size: 4rem; }
-            .score-value { font-size: 2rem; }
-            .versus-badge { width: 45px; height: 45px; font-size: 1.3rem; }
-            .game-btn { min-width: 70px; font-size: 1.5rem; padding: 0.5rem 0.8rem; }
+        /* ===== Адаптивность ===== */
+        @media (max-width: 600px) {
+            .game-card { padding: 1.5rem; }
+            .game-header h1 { font-size: 2rem; }
+            .game-arena { gap: 1rem; }
+            .choice-icon { width: 100px; height: 100px; font-size: 3.5rem; border-radius: 1.5rem; }
+            .score-card { min-width: 110px; padding: 0.8rem 1rem; }
+            .score-value { font-size: 2.5rem; }
+            .game-btn { min-width: 100px; padding: 0.8rem; }
             .game-btn span:first-child { font-size: 1.8rem; }
         }
     </style>
 </head>
 <body>
+
 <div class="game-card">
+    <div class="header-actions">
+        <!-- Ссылка на главное меню (название файла укажите ваше) -->
+        <a href="index.html" class="back-button">← В меню</a>
+    </div>
+
     <div class="game-header">
-        <h1>
-            <span>✊</span> Камень · Ножницы · Бумага <span>📄</span>
-        </h1>
-        <div class="sub">Игра против компьютера | Первый до победного настроения</div>
+        <h1><span>✊</span> Камень ✂️ Бумага <span>✋</span></h1>
+        <div class="sub">Игра против компьютера | Кто первый до 5 побед?</div>
     </div>
 
     <div class="scoreboard">
-        <div class="score-card">
-            <div class="score-label">ИГРОК</div>
+        <div class="score-card" id="player-card">
+            <div class="score-label">Игрок</div>
             <div class="score-value" id="player-score">0</div>
         </div>
         <div class="versus-badge">VS</div>
-        <div class="score-card">
-            <div class="score-label">КОМПЬЮТЕР</div>
+        <div class="score-card" id="computer-card">
+            <div class="score-label">ИИ</div>
             <div class="score-value" id="computer-score">0</div>
         </div>
     </div>
 
     <div class="game-arena">
         <div class="choice-panel">
-            <div class="choice-label">✨ Твой выбор</div>
+            <div class="choice-label">Твой выбор</div>
             <div class="choice-icon" id="player-choice-icon">
                 <span>❓</span>
             </div>
         </div>
         <div class="choice-panel">
-            <div class="choice-label">🤖 Выбор компьютера</div>
+            <div class="choice-label">Выбор ИИ</div>
             <div class="choice-icon" id="computer-choice-icon">
                 <span>❓</span>
             </div>
@@ -303,10 +400,11 @@
             <span>✋</span><span>Бумага</span>
         </button>
         <button class="game-btn reset-btn" id="reset-game">
-            <span>🔄</span><span>Сброс счета</span>
+            <span>🔄</span><span>Сброс</span>
         </button>
     </div>
-    <footer>Правила: Камень бьет ножницы, Ножницы режут бумагу, Бумага накрывает камень. Раунд за раундом!</footer>
+
+    <footer>Правила: Камень ломает ножницы, Ножницы режут бумагу, Бумага кроет камень.</footer>
 </div>
 
 <script>
@@ -328,101 +426,80 @@
 
     let playerScore = 0;
     let computerScore = 0;
-    let isProcessing = false;   // защита от спама во время анимации
+    let isProcessing = false; // защита от спама во время анимации
 
-    // Функция обновления интерфейса счета
+    // Обновление интерфейса счета
     function updateScoreUI() {
         playerScoreSpan.innerText = playerScore;
         computerScoreSpan.innerText = computerScore;
     }
 
-    // случайный ход компьютера
+    // Случайный ход компьютера
     function getComputerMove() {
         const randomIndex = Math.floor(Math.random() * moveOrder.length);
         return moveOrder[randomIndex];
     }
 
-    // Определение победителя: возвращает 'player', 'computer' или 'draw'
+    // Определение победителя
     function determineWinner(playerMove, computerMove) {
         if (playerMove === computerMove) return 'draw';
         if (movesMap[playerMove].beats === computerMove) return 'player';
         return 'computer';
     }
 
-    // Анимация пульсации на иконках
+    // Анимация пульсации
     function animateChoice(element) {
         if (!element) return;
+        element.classList.remove('pulse');
+        void element.offsetWidth; // Триггер рефлоу для перезапуска анимации
         element.classList.add('pulse');
-        setTimeout(() => {
-            element.classList.remove('pulse');
-        }, 260);
     }
 
     // Основная логика раунда
     async function playRound(playerMove) {
         if (isProcessing) {
-            // легкая вибрация сообщением
-            const msgDiv = resultMessageDiv;
-            msgDiv.innerHTML = `<div class="round-result">⏳ Подожди, идет ход...</div>`;
+            updateResultDisplay("⏳ Подожди, идет ход...", "draw");
             setTimeout(() => {
-                if (resultMessageDiv.innerHTML.includes("Подожди")) updateResultDisplay("🎲 Сделай ход!", "");
+                if (resultMessageDiv.innerText.includes("Подожди")) updateResultDisplay("🎲 Сделай ход!", "");
             }, 800);
             return;
         }
 
         isProcessing = true;
-
-        // Получаем ход компьютера
         const computerMove = getComputerMove();
 
-        // Визуализация быстрой смены (эффект "думает")
-        computerChoiceIconDiv.innerHTML = `<span>🤔💭</span>`;
+        // Эффект "обдумывания"
+        computerChoiceIconDiv.innerHTML = `<span>🤔</span>`;
         playerChoiceIconDiv.innerHTML = `<span>${movesMap[playerMove].emoji}</span>`;
         animateChoice(playerChoiceIconDiv);
 
-        // Небольшая задержка для реализма
-        await new Promise(resolve => setTimeout(resolve, 180));
+        // Задержка для реализма
+        await new Promise(resolve => setTimeout(resolve, 300));
 
-        // Отображаем ход компьютера
         computerChoiceIconDiv.innerHTML = `<span>${movesMap[computerMove].emoji}</span>`;
         animateChoice(computerChoiceIconDiv);
 
-        // Определение результата
         const winner = determineWinner(playerMove, computerMove);
         let resultText = "";
-        let pointAdded = false;
 
         if (winner === 'player') {
             playerScore++;
-            resultText = `🥳 Вы победили! ${movesMap[playerMove].name} ${getVerb(playerMove, computerMove)} ${movesMap[computerMove].name}.`;
-            pointAdded = true;
+            resultText = `🥳 Вы победили! ${movesMap[playerMove].name} ${getVerb(playerMove, computerMove)} ${movesMap[computerMove].name.toLowerCase()}.`;
         } else if (winner === 'computer') {
             computerScore++;
-            resultText = `😵 Компьютер победил! ${movesMap[computerMove].name} ${getVerb(computerMove, playerMove)} ${movesMap[playerMove].name}.`;
-            pointAdded = true;
+            resultText = `😵 ИИ победил! ${movesMap[computerMove].name} ${getVerb(computerMove, playerMove)} ${movesMap[playerMove].name.toLowerCase()}.`;
         } else {
-            resultText = `🤝 Ничья! Оба выбрали ${movesMap[playerMove].name}.`;
+            resultText = `🤝 Ничья! Оба выбрали ${movesMap[playerMove].name.toLowerCase()}.`;
         }
 
-        // Обновляем счет и UI
         updateScoreUI();
+        updateResultDisplay(resultText, winner);
 
-        // Дополнительное описание победы + сообщение
-        let extraMsg = "";
-        if (winner !== 'draw') {
-            extraMsg = winner === 'player' ? " +1 очко вам!" : " +1 очко компьютеру.";
-        }
-        const finalMessage = `${resultText}${extraMsg}`;
-        updateResultDisplay(finalMessage, winner);
-
-        // Проверка на "сладкую победу" (необязательно, но можно показать сообщение о преимуществе)
+        // Проверка на окончание матча (до 5 побед)
         if (playerScore >= 5 || computerScore >= 5) {
-            let gameWinner = playerScore >= 5 ? "ИГРОК" : "КОМПЬЮТЕР";
-            let celebrationMsg = playerScore >= 5 ? "🏆 ПОБЕДА В ИГРЕ! Великолепно! 🏆" : "💀 КОМПЬЮТЕР ВЫИГРАЛ МАТЧ! Попробуйте снова 💀";
-            updateResultDisplay(`${celebrationMsg}  Финальный счёт ${playerScore} : ${computerScore}. Нажмите «Сброс счета» для новой игры.`, winner);
-            // блокируем дальнейшие ходы до сброса
-            isProcessing = true;  // останется заблокировано, пока не нажмут сброс, но в сбросе флаг снимем
-            // также добавим визуальный запрет кнопкам ненадолго, но проще сделать проверку в начале хода + сброс
+            let gameWinner = playerScore >= 5 ? "ИГРОК" : "ИИ";
+            let celebrationMsg = playerScore >= 5 ? "🏆 ВЫ ВЫИГРАЛИ МАТЧ!" : "💀 КОМПЬЮТЕР ВЫИГРАЛ МАТЧ!";
+            updateResultDisplay(`${celebrationMsg} Финал ${playerScore}:${computerScore}. Жми «Сброс»`, winner);
             disableGameButtons(true);
             return;
         }
@@ -430,98 +507,67 @@
         isProcessing = false;
     }
 
-    // вспомогательный глагол для описания победы
+    // Вспомогательный глагол
     function getVerb(winnerMove, loserMove) {
-        if (winnerMove === 'rock' && loserMove === 'scissors') return "разбивает";
-        if (winnerMove === 'scissors' && loserMove === 'paper') return "разрезает";
-        if (winnerMove === 'paper' && loserMove === 'rock') return "накрывает";
+        if (winnerMove === 'rock' && loserMove === 'scissors') return "ломает";
+        if (winnerMove === 'scissors' && loserMove === 'paper') return "режут";
+        if (winnerMove === 'paper' && loserMove === 'rock') return "кроет";
         return "побеждает";
     }
 
-    // Обновить панель результата
+    // Обновить панель результата с добавлением классов состояний (win/lose/draw)
     function updateResultDisplay(message, winnerType = "") {
-        // winnerType для дополнительных эмодзи: 'player', 'computer', 'draw'
-        let bgHint = "";
-        if (winnerType === 'player') bgHint = "background: #2b7340aa; border-left-color: gold;";
-        else if (winnerType === 'computer') bgHint = "background: #732b2baa; border-left-color: #ffaa66;";
-        else bgHint = "background: #2a4f66aa;";
-        resultMessageDiv.style.transition = "0.2s";
-        resultMessageDiv.innerHTML = `<div class="round-result" style="${bgHint} padding: 0.4rem 1rem;">${message}</div>`;
-        // меняем стиль border динамически
-        const innerDiv = resultMessageDiv.querySelector('.round-result');
-        if (innerDiv) {
-            innerDiv.style.borderRadius = "2rem";
-        }
+        let stateClass = "";
+        if (winnerType === 'player') stateClass = "win";
+        else if (winnerType === 'computer') stateClass = "lose";
+        else if (winnerType === 'draw') stateClass = "draw";
+
+        resultMessageDiv.innerHTML = `<div class="round-result ${stateClass}">${message}</div>`;
     }
 
-    // временно отключаем кнопки выбора при достижении лимита побед
+    // Отключение кнопок при конце матча
     function disableGameButtons(disabled) {
         const btns = document.querySelectorAll('.game-btn[data-move]');
         btns.forEach(btn => {
             if (disabled) {
                 btn.style.opacity = "0.5";
                 btn.style.pointerEvents = "none";
+                btn.style.filter = "grayscale(100%)";
             } else {
                 btn.style.opacity = "1";
                 btn.style.pointerEvents = "auto";
+                btn.style.filter = "none";
             }
         });
     }
 
-    // сброс полной игры (очистка счета и состояния)
-    function resetGame(fullReset = true) {
-        if (isProcessing && fullReset) {
-            // сбрасываем блокировку принудительно, если пользователь сбросил во время анимации
-            isProcessing = false;
-        }
+    // Сброс
+    function resetGame() {
         playerScore = 0;
         computerScore = 0;
         updateScoreUI();
 
-        // сброс иконок и анимаций
         playerChoiceIconDiv.innerHTML = `<span>❓</span>`;
         computerChoiceIconDiv.innerHTML = `<span>❓</span>`;
-        updateResultDisplay("✨ Счёт сброшен! Сделайте ход, чтобы начать новую серию ✨", "");
-        // включаем все кнопки
+        updateResultDisplay("✨ Счёт сброшен! Сделай ход ✨", "");
+        
         disableGameButtons(false);
         isProcessing = false;
     }
 
-    // инициализация обработчиков
+    // Привязка событий
     function bindEvents() {
-        const rockBtn = document.querySelector('[data-move="rock"]');
-        const scissorsBtn = document.querySelector('[data-move="scissors"]');
-        const paperBtn = document.querySelector('[data-move="paper"]');
-        const resetBtn = document.getElementById("reset-game");
-
-        rockBtn.addEventListener("click", () => {
-            if (isProcessing) return;
-            playRound("rock");
-        });
-        scissorsBtn.addEventListener("click", () => {
-            if (isProcessing) return;
-            playRound("scissors");
-        });
-        paperBtn.addEventListener("click", () => {
-            if (isProcessing) return;
-            playRound("paper");
-        });
-        resetBtn.addEventListener("click", () => {
-            // если игра была заблокирована из-за победы в матче, сброс снимет блокировку
-            resetGame(true);
-        });
+        document.querySelector('[data-move="rock"]').addEventListener("click", () => playRound("rock"));
+        document.querySelector('[data-move="scissors"]').addEventListener("click", () => playRound("scissors"));
+        document.querySelector('[data-move="paper"]').addEventListener("click", () => playRound("paper"));
+        document.getElementById("reset-game").addEventListener("click", resetGame);
     }
 
-    // Дополнительное действие: предотвратить двойные быстрые клики, а также установить начальное состояние
-    function initGame() {
+    // Инициализация
+    window.addEventListener("DOMContentLoaded", () => {
         bindEvents();
-        resetGame(true);
-        // дополнительно: при загрузке чистый статус
-        isProcessing = false;
-    }
-
-    // запуск игры после загрузки страницы
-    window.addEventListener("DOMContentLoaded", initGame);
+        resetGame();
+    });
 </script>
 </body>
 </html>
