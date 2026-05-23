@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Игровой портал | Морской бой · Камень-ножницы-бумага · Вордли · Крестики-нолики</title>
     <style>
+        /* ===== Общие сбросы и стили меню ===== */
         * {
             margin: 0;
             padding: 0;
@@ -20,18 +21,29 @@
             justify-content: center;
             align-items: center;
             padding: 1.5rem;
+            position: relative;
         }
 
-        .menu-container {
-            max-width: 1300px;
+        /* Контейнер всего портала (меню + игра) */
+        #app-root {
             width: 100%;
+            max-width: 1300px;
+            position: relative;
+        }
+
+        /* ---------- Меню ---------- */
+        .menu-container {
             background: rgba(10, 30, 45, 0.65);
             backdrop-filter: blur(14px);
             border-radius: 3.5rem;
             border: 1px solid rgba(255, 200, 120, 0.5);
             box-shadow: 0 30px 45px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.1);
             overflow: hidden;
-            transition: transform 0.2s;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .menu-hidden {
+            display: none;
         }
 
         .portal-header {
@@ -81,6 +93,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            cursor: pointer;
         }
 
         .game-card:hover {
@@ -132,6 +145,7 @@
             transition: 0.12s linear;
             box-shadow: 0 4px 0 #1e462e;
             font-family: monospace;
+            pointer-events: none; /* клик обрабатываем на карточке */
         }
 
         .game-card:hover .play-button {
@@ -140,6 +154,7 @@
             letter-spacing: 0.5px;
         }
 
+        /* Разработчик */
         .developer-section {
             margin: 1.5rem 2rem 2rem 2rem;
             padding: 1.8rem 2rem;
@@ -148,7 +163,6 @@
             border-radius: 2rem;
             border: 1px solid #ffb34766;
             box-shadow: 0 12px 28px rgba(0,0,0,0.4);
-            transition: all 0.2s;
         }
         .developer-section:hover {
             border-color: #ffcd7e;
@@ -231,6 +245,199 @@
             animation: gentlePulse 2s infinite ease-in-out;
         }
 
+        /* ---------- Стили игры «Крестики-нолики» ---------- */
+        :root {
+            --bg: #1a1a2e;
+            --surface: #16213e;
+            --cell-bg: #0f3460;
+            --cell-hover: #1a4a7a;
+            --x-color: #e94560;
+            --o-color: #4ecdc4;
+            --text: #eee;
+            --text-secondary: #aaa;
+            --win-highlight: #ffd700;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --btn-bg: #533483;
+            --btn-hover: #6a44b2;
+        }
+
+        .game-wrapper {
+            display: none;
+            position: relative;
+            z-index: 10;
+            background: var(--surface);
+            border-radius: 28px;
+            padding: 30px 30px 25px;
+            box-shadow: var(--shadow), 0 0 80px rgba(78, 205, 196, 0.08);
+            text-align: center;
+            max-width: 440px;
+            width: 95%;
+            margin: 1rem auto;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(4px);
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .game-wrapper.visible {
+            display: block;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .back-button {
+            background: none;
+            border: 1px solid #ffffff30;
+            color: #ffcf7e;
+            font-size: 1rem;
+            font-weight: bold;
+            padding: 0.5rem 1.2rem;
+            border-radius: 2rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+            background: rgba(0,0,0,0.3);
+        }
+        .back-button:hover {
+            background: #ffffff15;
+            border-color: #ffcd7e;
+        }
+
+        .game-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, var(--x-color), #f07b8a, var(--o-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .scoreboard {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 18px;
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        .scoreboard span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.3s;
+        }
+        .score-x { color: var(--x-color); font-size: 1.3rem; font-weight: 700; }
+        .score-o { color: var(--o-color); font-size: 1.3rem; font-weight: 700; }
+        .score-draw { color: #ffd700; font-size: 1.3rem; font-weight: 700; }
+        .active-indicator {
+            box-shadow: 0 0 20px currentColor;
+            border: 1px solid currentColor !important;
+        }
+
+        .status {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 22px;
+            color: var(--text);
+            min-height: 32px;
+        }
+        .status .current-icon {
+            display: inline-block;
+            font-weight: 800;
+            font-size: 1.5rem;
+            animation: pulse 0.8s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%,100% { transform: scale(1); }
+            50% { transform: scale(1.25); }
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 320px;
+            margin: 0 auto 24px;
+            aspect-ratio: 1/1;
+        }
+        .cell {
+            background: var(--cell-bg);
+            border-radius: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: 700;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            border: 2px solid transparent;
+            aspect-ratio: 1/1;
+        }
+        .cell:hover:not(.taken) {
+            background: var(--cell-hover);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+        }
+        .cell:active:not(.taken) { transform: scale(0.94); }
+        .cell.taken { cursor: not-allowed; pointer-events: none; }
+        .cell.x-mark { color: var(--x-color); text-shadow: 0 0 20px rgba(233,68,96,0.5); }
+        .cell.o-mark { color: var(--o-color); text-shadow: 0 0 20px rgba(78,205,196,0.5); }
+        .cell.win-cell {
+            animation: winGlow 0.7s ease-in-out infinite alternate;
+            border-color: var(--win-highlight) !important;
+            box-shadow: 0 0 25px rgba(255,215,0,0.6) !important;
+            transform: scale(1.05);
+        }
+        @keyframes winGlow {
+            from { box-shadow: 0 0 15px rgba(255,215,0,0.4); }
+            to { box-shadow: 0 0 35px rgba(255,215,0,0.8); }
+        }
+        .cell.pop-in {
+            animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            70% { transform: scale(1.15); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .btn-reset {
+            background: var(--btn-bg);
+            color: #fff;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 6px 18px rgba(83,52,131,0.35);
+            text-transform: uppercase;
+        }
+        .btn-reset:hover { background: var(--btn-hover); }
+
+        /* Адаптивность игры */
+        @media (max-width: 460px) {
+            .game-wrapper { padding: 20px 15px; }
+            .game-title { font-size: 1.8rem; }
+            .board { gap: 7px; max-width: 260px; }
+            .cell { font-size: 2.4rem; border-radius: 12px; }
+        }
+
+        /* Общие адаптации меню */
         @media (max-width: 850px) {
             .games-grid { gap: 1.8rem; }
             .developer-section { margin: 1rem; padding: 1.2rem; }
@@ -249,83 +456,294 @@
     </style>
 </head>
 <body>
-<div class="menu-container">
-    <div class="portal-header">
-        <h1>
-            <span>🎮</span> ИГРОВОЙ ПОРТАЛ <span>⚡</span>
-        </h1>
-        <p>Выберите битву: стратегия на море, поединок жестов, угадай слово или классические крестики-нолики</p>
-    </div>
+<div id="app-root">
+    <!-- ===== МЕНЮ ===== -->
+    <div class="menu-container" id="mainMenu">
+        <div class="portal-header">
+            <h1><span>🎮</span> ИГРОВОЙ ПОРТАЛ <span>⚡</span></h1>
+            <p>Выберите битву: стратегия на море, поединок жестов, угадай слово или классические крестики-нолики</p>
+        </div>
 
-    <div class="games-grid">
-        <!-- Морской бой -->
-        <a href="ship-fight.html" class="game-card">
-            <div class="card-image">⚓🚢💥</div>
-            <div class="card-info">
-                <h2>Морской бой</h2>
-                <p>Стратегическая дуэль с ИИ. Размещайте корабли, атакуйте врага и топите флот!</p>
-                <div class="play-button"><span>🔫</span> ИГРАТЬ <span>🌊</span></div>
-            </div>
-        </a>
+        <div class="games-grid">
+            <!-- Морской бой (внешний файл) -->
+            <a href="ship-fight.html" class="game-card">
+                <div class="card-image">⚓🚢💥</div>
+                <div class="card-info">
+                    <h2>Морской бой</h2>
+                    <p>Стратегическая дуэль с ИИ. Размещайте корабли, атакуйте врага и топите флот!</p>
+                    <div class="play-button"><span>🔫</span> ИГРАТЬ <span>🌊</span></div>
+                </div>
+            </a>
 
-        <!-- Камень-ножницы-бумага -->
-        <a href="Rock-scissors-paper.html" class="game-card">
-            <div class="card-image">✊ ✌️ ✋</div>
-            <div class="card-info">
-                <h2>Камень ✂️ Бумага</h2>
-                <p>Классическая игра против компьютера. Реакция, удача и счёт до победы!</p>
-                <div class="play-button"><span>🎲</span> ИГРАТЬ <span>🏆</span></div>
-            </div>
-        </a>
+            <!-- Камень-ножницы-бумага (внешний файл) -->
+            <a href="Rock-scissors-paper.html" class="game-card">
+                <div class="card-image">✊ ✌️ ✋</div>
+                <div class="card-info">
+                    <h2>Камень ✂️ Бумага</h2>
+                    <p>Классическая игра против компьютера. Реакция, удача и счёт до победы!</p>
+                    <div class="play-button"><span>🎲</span> ИГРАТЬ <span>🏆</span></div>
+                </div>
+            </a>
 
-        <!-- Вордли -->
-        <a href="WORDLY.html" class="game-card">
-            <div class="card-image">🧠📖✨</div>
-            <div class="card-info">
-                <h2>WORDLY</h2>
-                <p>Угадай слово за 6 попыток, получай цветные подсказки и тренируй словарный запас!</p>
-                <div class="play-button"><span>🔤</span> ИГРАТЬ <span>🏅</span></div>
-            </div>
-        </a>
+            <!-- Вордли (внешний файл) -->
+            <a href="WORDLY.html" class="game-card">
+                <div class="card-image">🧠📖✨</div>
+                <div class="card-info">
+                    <h2>WORDLY</h2>
+                    <p>Угадай слово за 6 попыток, получай цветные подсказки и тренируй словарный запас!</p>
+                    <div class="play-button"><span>🔤</span> ИГРАТЬ <span>🏅</span></div>
+                </div>
+            </a>
 
-        <!-- НОВАЯ ИГРА: Крестики-нолики -->
-        <a href="tic-tac-toe.html" class="game-card">
-            <div class="card-image">❌⭕🎯</div>
-            <div class="card-info">
-                <h2>Крестики-нолики</h2>
-                <p>Классика для двоих: ставьте X и O, стройте линии и побеждайте друга или играйте вдвоём!</p>
-                <div class="play-button"><span>🎮</span> СТАРТ <span>🏆</span></div>
+            <!-- Крестики-нолики (встроенная игра) -->
+            <div class="game-card" id="ticTacToeCard">
+                <div class="card-image">❌⭕🎯</div>
+                <div class="card-info">
+                    <h2>Крестики-нолики</h2>
+                    <p>Классика для двоих: ставьте X и O, стройте линии и побеждайте друга или играйте вдвоём!</p>
+                    <div class="play-button"><span>🎮</span> СТАРТ <span>🏆</span></div>
+                </div>
             </div>
-        </a>
-    </div>
+        </div>
 
-    <!-- Блок разработчика (обновлена статистика) -->
-    <div class="developer-section">
-        <div class="dev-title">👨‍💻 О РАЗРАБОТЧИКЕ</div>
-        <div class="dev-content">
-            <div class="dev-text">
-                <p>✨ <strong>Светослав</strong> — создатель всех четырёх игр, представленных на этом портале. Более 2 лет он разрабатывает интерактивные веб-проекты, сочетая креативный дизайн, чистый код и игровую физику. Каждая игра продумана до мелочей: от анимаций до сбалансированной сложности.</p>
-                <p>🎯 За плечами Светослава <strong>десятки завершённых проектов</strong>: аркады, головоломки, стратегии, логические игры. Он постоянно экспериментирует с новыми технологиями (Canvas, CSS-анимации, адаптивный JavaScript), чтобы каждая игра была увлекательной и работала на любом устройстве.</p>
-                <p>⭐ <strong>Почему стоит играть?</strong> Все проекты Светослава — это авторский код без шаблонов, живая обратная связь от игроков и постоянные обновления. Скоро выйдут новые игры: "Космический рейнджер", "Магический пазл" и многопользовательский режим.</p>
-                <div class="dev-signature">— Светослав, геймдизайнер и full‑stack энтузиаст</div>
+        <!-- Блок разработчика -->
+        <div class="developer-section">
+            <div class="dev-title">👨‍💻 О РАЗРАБОТЧИКЕ</div>
+            <div class="dev-content">
+                <div class="dev-text">
+                    <p>✨ <strong>Светослав</strong> — создатель всех четырёх игр, представленных на этом портале. Более 2 лет он разрабатывает интерактивные веб-проекты, сочетая креативный дизайн, чистый код и игровую физику.</p>
+                    <p>🎯 За плечами Светослава <strong>десятки завершённых проектов</strong>: аркады, головоломки, стратегии, логические игры.</p>
+                    <p>⭐ <strong>Почему стоит играть?</strong> Все проекты Светослава — это авторский код без шаблонов, живая обратная связь от игроков и постоянные обновления.</p>
+                    <div class="dev-signature">— Светослав, геймдизайнер и full‑stack энтузиаст</div>
+                </div>
+                <div class="dev-stats">
+                    <div class="stat-number">🔥 30+</div>
+                    <div class="stat-label">законченных проектов</div>
+                    <hr>
+                    <div class="stat-number">🎮 4</div>
+                    <div class="stat-label">игры в этом портале</div>
+                    <hr>
+                    <div class="stat-number">⚡ 12K+</div>
+                    <div class="stat-label">строк чистого кода</div>
+                </div>
             </div>
-            <div class="dev-stats">
-                <div class="stat-number">🔥 30+</div>
-                <div class="stat-label">законченных проектов</div>
-                <hr>
-                <div class="stat-number">🎮 4</div>
-                <div class="stat-label">игры в этом портале</div>
-                <hr>
-                <div class="stat-number">⚡ 12K+</div>
-                <div class="stat-label">строк чистого кода</div>
-            </div>
+        </div>
+
+        <div class="footer-note">
+            🧭 Убедитесь, что файлы <strong>ship-fight.html</strong>, <strong>Rock-scissors-paper.html</strong>, <strong>WORDLY.html</strong> находятся в одной папке с этим меню.<br>
+            Все игры созданы Светославом — наслаждайтесь и возвращайтесь за новыми проектами!
         </div>
     </div>
 
-    <div class="footer-note">
-        🧭 Убедитесь, что файлы <strong>ship-fight.html</strong>, <strong>Rock-scissors-paper.html</strong>, <strong>WORDLY.html</strong> и <strong>tic-tac-toe.html</strong> находятся в одной папке с этим меню.<br>
-        Все игры созданы Светославом — наслаждайтесь и возвращайтесь за новыми проектами!
+    <!-- ===== ИГРА «КРЕСТИКИ-НОЛИКИ» (изначально скрыта) ===== -->
+    <div class="game-wrapper" id="ticTacToeGame">
+        <button class="back-button" id="backToMenuBtn">← Назад в меню</button>
+        <h1 class="game-title">КРЕСТИКИ-НОЛИКИ</h1>
+
+        <div class="scoreboard">
+            <span id="scoreX">❌ <span class="score-x" id="scoreXVal">0</span></span>
+            <span id="scoreDraw">🤝 <span class="score-draw" id="scoreDrawVal">0</span></span>
+            <span id="scoreO"><span class="score-o" id="scoreOVal">0</span> ⭕</span>
+        </div>
+
+        <div class="status" id="status">
+            Ход: <span class="current-icon" style="color: var(--x-color);">❌</span>
+        </div>
+
+        <div class="board" id="board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+
+        <button class="btn-reset" id="btnReset">🔄 Новая игра</button>
     </div>
 </div>
+
+<script>
+    (function() {
+        // --- Элементы меню и игры ---
+        const mainMenu = document.getElementById('mainMenu');
+        const gameWrapper = document.getElementById('ticTacToeGame');
+        const ticTacToeCard = document.getElementById('ticTacToeCard');
+        const backToMenuBtn = document.getElementById('backToMenuBtn');
+
+        // --- Логика игры ---
+        const boardEl = document.getElementById('board');
+        const cells = boardEl.querySelectorAll('.cell');
+        const statusEl = document.getElementById('status');
+        const scoreXEl = document.getElementById('scoreXVal');
+        const scoreOEl = document.getElementById('scoreOVal');
+        const scoreDrawEl = document.getElementById('scoreDrawVal');
+        const scoreXSpan = document.getElementById('scoreX');
+        const scoreOSpan = document.getElementById('scoreO');
+        const scoreDrawSpan = document.getElementById('scoreDraw');
+        const btnReset = document.getElementById('btnReset');
+
+        let board = Array(9).fill(null);
+        let currentPlayer = 'X';
+        let gameOver = false;
+        let winningCombo = null;
+        let scores = { X: 0, O: 0, draw: 0 };
+
+        const winCombos = [
+            [0,1,2],[3,4,5],[6,7,8],
+            [0,3,6],[1,4,7],[2,5,8],
+            [0,4,8],[2,4,6]
+        ];
+
+        function updateBoardUI() {
+            cells.forEach((cell, index) => {
+                cell.classList.remove('x-mark','o-mark','taken','win-cell','pop-in');
+                cell.textContent = '';
+                if (board[index] === 'X') {
+                    cell.textContent = '✕';
+                    cell.classList.add('x-mark','taken');
+                } else if (board[index] === 'O') {
+                    cell.textContent = '◯';
+                    cell.classList.add('o-mark','taken');
+                }
+            });
+            if (winningCombo) {
+                winningCombo.forEach(idx => cells[idx].classList.add('win-cell'));
+            }
+        }
+
+        function updateStatus() {
+            scoreXSpan.classList.remove('active-indicator');
+            scoreOSpan.classList.remove('active-indicator');
+            scoreDrawSpan.classList.remove('active-indicator');
+            if (gameOver) {
+                if (winningCombo) {
+                    const winner = board[winningCombo[0]];
+                    statusEl.innerHTML = `🏆 Победил: <span style="color:${winner==='X'?'var(--x-color)':'var(--o-color)'}; font-weight:800;">${winner==='X'?'❌ Крестики':'⭕ Нолики'}</span>`;
+                    statusEl.classList.add('win'); statusEl.classList.remove('draw');
+                    if (winner === 'X') scoreXSpan.classList.add('active-indicator');
+                    else scoreOSpan.classList.add('active-indicator');
+                } else {
+                    statusEl.innerHTML = '🤝 Ничья!';
+                    statusEl.classList.add('draw'); statusEl.classList.remove('win');
+                    scoreDrawSpan.classList.add('active-indicator');
+                }
+            } else {
+                statusEl.innerHTML = `Ход: <span class="current-icon" style="color:${currentPlayer==='X'?'var(--x-color)':'var(--o-color)'};">${currentPlayer==='X'?'❌':'⭕'}</span>`;
+                statusEl.classList.remove('win','draw');
+                if (currentPlayer === 'X') scoreXSpan.classList.add('active-indicator');
+                else scoreOSpan.classList.add('active-indicator');
+            }
+            scoreXEl.textContent = scores.X;
+            scoreOEl.textContent = scores.O;
+            scoreDrawEl.textContent = scores.draw;
+        }
+
+        function checkWinner(brd) {
+            for (const combo of winCombos) {
+                const [a,b,c] = combo;
+                if (brd[a] && brd[a] === brd[b] && brd[a] === brd[c]) return combo;
+            }
+            return null;
+        }
+
+        function isBoardFull(brd) { return brd.every(c => c !== null); }
+
+        function handleMove(index) {
+            if (gameOver || board[index] !== null) return;
+            board[index] = currentPlayer;
+            const movedCell = cells[index];
+            const combo = checkWinner(board);
+            if (combo) {
+                gameOver = true;
+                winningCombo = combo;
+                scores[currentPlayer]++;
+                updateBoardUI();
+                movedCell.classList.add('pop-in');
+                updateStatus();
+                return;
+            }
+            if (isBoardFull(board)) {
+                gameOver = true;
+                winningCombo = null;
+                scores.draw++;
+                updateBoardUI();
+                movedCell.classList.add('pop-in');
+                updateStatus();
+                return;
+            }
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            updateBoardUI();
+            movedCell.classList.add('pop-in');
+            updateStatus();
+        }
+
+        function resetGame() {
+            board = Array(9).fill(null);
+            currentPlayer = 'X';
+            gameOver = false;
+            winningCombo = null;
+            updateBoardUI();
+            updateStatus();
+        }
+
+        function resetAll() {
+            scores = { X:0, O:0, draw:0 };
+            resetGame();
+        }
+
+        // Обработчики игрового поля
+        boardEl.addEventListener('click', (e) => {
+            const cell = e.target.closest('.cell');
+            if (!cell) return;
+            const index = parseInt(cell.getAttribute('data-index'));
+            if (!isNaN(index)) handleMove(index);
+        });
+
+        btnReset.addEventListener('click', () => {
+            if (gameOver) resetGame();
+            else resetAll();
+        });
+        btnReset.addEventListener('dblclick', (e) => { e.preventDefault(); resetAll(); });
+
+        // Клавиатурное управление (только когда игра видна)
+        function onKeyDown(e) {
+            if (!gameWrapper.classList.contains('visible')) return;
+            if (e.key === 'r' || e.key === 'R') { resetGame(); return; }
+            const keyMap = { '1':6,'2':7,'3':8,'4':3,'5':4,'6':5,'7':0,'8':1,'9':2 };
+            const qwertyMap = { 'q':0,'w':1,'e':2,'a':3,'s':4,'d':5,'z':6,'x':7,'c':8 };
+            if (keyMap[e.key] !== undefined) { e.preventDefault(); handleMove(keyMap[e.key]); }
+            else if (qwertyMap[e.key] !== undefined) { e.preventDefault(); handleMove(qwertyMap[e.key]); }
+        }
+        document.addEventListener('keydown', onKeyDown);
+
+        // --- Переключение между меню и игрой ---
+        function showGame() {
+            mainMenu.classList.add('menu-hidden');
+            gameWrapper.classList.add('visible');
+            // При открытии игры сбрасываем текущую партию (счёт сохраняется)
+            resetGame();
+        }
+
+        function showMenu() {
+            gameWrapper.classList.remove('visible');
+            mainMenu.classList.remove('menu-hidden');
+        }
+
+        ticTacToeCard.addEventListener('click', (e) => {
+            e.preventDefault();
+            showGame();
+        });
+
+        backToMenuBtn.addEventListener('click', showMenu);
+
+        // Инициализация игрового UI
+        updateBoardUI();
+        updateStatus();
+    })();
+</script>
 </body>
 </html>
