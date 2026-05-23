@@ -2,696 +2,572 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>🎮 Вордли | Wordle-style игра</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Камень, ножницы, бумага | Игровой портал</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-color-1: #0f172a;
+            --bg-color-2: #1e1b4b;
+            --bg-color-3: #312e81;
+            --glass-bg: rgba(20, 25, 45, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --primary: #818cf8;
+            --accent: #f472b6;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --win-color: #34d399; /* Изумрудный для победы */
+            --lose-color: #fb7185; /* Розовый для поражения */
+        }
+
+        /* ===== Общие сбросы ===== */
         * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
             user-select: none;
         }
 
         body {
-            background: linear-gradient(145deg, #121212 0%, #1a1e2c 100%);
-            font-family: 'Segoe UI', 'Poppins', 'Inter', system-ui, -apple-system, 'Roboto', sans-serif;
-            margin: 0;
             min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 1.5rem;
+            position: relative;
+            color: var(--text-main);
+            /* Анимированный градиентный фон */
+            background: linear-gradient(-45deg, var(--bg-color-1), var(--bg-color-2), var(--bg-color-3), #170f2a);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            overflow-x: hidden;
         }
 
-        /* главный контейнер */
-        .game-wrapper {
-            max-width: 620px;
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Декоративные круги на фоне */
+        body::before, body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: 0;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        body::before {
+            width: 400px; height: 400px;
+            background: var(--primary);
+            top: -100px; left: -100px;
+        }
+        body::after {
+            width: 300px; height: 300px;
+            background: var(--accent);
+            bottom: -50px; right: -50px;
+        }
+
+        /* ===== Главный контейнер ===== */
+        .game-card {
             width: 100%;
-            background: rgba(18, 18, 18, 0.7);
-            backdrop-filter: blur(4px);
-            border-radius: 48px;
-            padding: 20px 16px 30px;
-            box-shadow: 0 25px 45px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
-            transition: all 0.2s;
+            max-width: 800px;
+            position: relative;
+            z-index: 10;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 2rem;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            padding: 2.5rem;
+            animation: fadeIn 0.6s ease-out;
         }
 
-        h1 {
-            text-align: center;
-            font-size: 2.1rem;
-            font-weight: 800;
-            letter-spacing: 3px;
-            margin: 0 0 8px 0;
-            color: #f9f6e5;
-            text-shadow: 0 2px 5px #00000030;
-            word-break: keep-all;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
-        .sub {
+
+        /* ===== Кнопка назад ===== */
+        .header-actions {
+            margin-bottom: 1rem;
+        }
+        .back-button {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            font-size: 0.9rem;
+            text-decoration: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 2rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            transform: translateX(-5px);
+        }
+
+        /* ===== Шапка ===== */
+        .game-header {
             text-align: center;
-            color: #9aa4bf;
-            font-size: 0.75rem;
-            margin-top: -8px;
-            margin-bottom: 20px;
+            margin-bottom: 2rem;
+        }
+        .game-header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: linear-gradient(to right, #a78bfa, #f472b6, #fb7185);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .game-header .sub {
+            color: var(--text-muted);
+            font-size: 1rem;
             font-weight: 500;
         }
 
-        /* сетка 6x5 */
-        .board {
+        /* ===== Секция счета ===== */
+        .scoreboard {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 28px;
-        }
-
-        .row {
-            display: flex;
-            gap: 10px;
             justify-content: center;
-        }
-
-        .tile {
-            width: 65px;
-            height: 65px;
-            background: #1e1f24;
-            border: 2px solid #3a3c42;
-            border-radius: 14px;
-            display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            font-weight: 800;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        .score-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            padding: 1rem 2rem;
+            border-radius: 1.5rem;
+            text-align: center;
+            min-width: 140px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+        .score-label {
+            font-size: 0.85rem;
             text-transform: uppercase;
-            color: #f2f2f2;
-            transition: all 0.12s linear;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            font-family: 'Courier New', 'Fira Mono', monospace;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+        .score-value {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary);
+            line-height: 1;
+        }
+        #computer-score {
+            color: var(--accent);
+        }
+        .versus-badge {
+            font-size: 1.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: #fff;
+            box-shadow: 0 0 15px rgba(244, 114, 182, 0.4);
         }
 
-        /* анимация нажатия */
-        .tile.pop {
-            transform: scale(0.92);
+        /* ===== Зона выбора ===== */
+        .game-arena {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        .choice-panel {
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+        }
+        .choice-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
+            display: inline-block;
+        }
+        .choice-icon {
+            font-size: 5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 2rem;
+            width: 140px;
+            height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+        .choice-icon span {
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3));
         }
 
-        /* цветовые состояния */
-        .tile.correct {
-            background: #538d4e;
-            border-color: #538d4e;
-            animation: softFlip 0.3s ease;
+        /* ===== Зона результатов ===== */
+        .result-area {
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
         }
-        .tile.present {
-            background: #b59f3b;
-            border-color: #b59f3b;
-            animation: softFlip 0.3s ease;
+        .round-result {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            padding: 0.8rem 1.5rem;
+            border-radius: 2rem;
+            font-size: 1.1rem;
+            font-weight: 500;
+            text-align: center;
+            transition: all 0.3s ease;
         }
-        .tile.absent {
-            background: #3a3a3c;
-            border-color: #3a3a3c;
-            color: #c0c0c0;
+        /* Динамические классы для результатов */
+        .round-result.win {
+            border-color: var(--win-color);
+            background: rgba(52, 211, 153, 0.1);
+            box-shadow: 0 0 15px rgba(52, 211, 153, 0.2);
+            color: var(--win-color);
+        }
+        .round-result.lose {
+            border-color: var(--lose-color);
+            background: rgba(251, 113, 133, 0.1);
+            box-shadow: 0 0 15px rgba(251, 113, 133, 0.2);
+            color: var(--lose-color);
+        }
+        .round-result.draw {
+            border-color: var(--text-muted);
+            color: var(--text-main);
         }
 
-        @keyframes softFlip {
-            0% { transform: scale(0.9); opacity: 0.6; }
-            80% { transform: scale(1.02); }
-            100% { transform: scale(1); }
+        /* ===== Кнопки действий ===== */
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
         }
-
-        /* клавиатура */
-        .keyboard {
+        .game-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            font-family: inherit;
+            padding: 1rem 1.5rem;
+            border-radius: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 8px;
-            margin-top: 15px;
+            min-width: 120px;
         }
-        .kb-row {
-            display: flex;
+        .game-btn span:first-child { font-size: 2rem; }
+        .game-btn span:last-child { font-size: 0.9rem; font-weight: 600; letter-spacing: 1px; }
+        
+        .game-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3), 0 0 15px rgba(129, 140, 248, 0.3);
+        }
+        .game-btn:active { transform: translateY(0); }
+
+        .reset-btn {
+            background: linear-gradient(135deg, #f43f5e, #e11d48);
+            border: none;
             justify-content: center;
-            gap: 6px;
-            flex-wrap: wrap;
         }
-        .key {
-            background: #2f3138;
-            border: none;
-            border-radius: 12px;
-            padding: 12px 12px;
-            min-width: 44px;
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #f9f9f9;
-            cursor: pointer;
-            transition: all 0.1s;
-            text-transform: uppercase;
-            box-shadow: 0 2px 3px rgba(0,0,0,0.3);
-            font-family: monospace;
-        }
-        .key:active {
-            transform: scale(0.96);
-            background: #3f4250;
-        }
-        .key.special {
-            background: #4c505c;
-            font-size: 0.9rem;
-            min-width: 68px;
-        }
-        /* стили клавиш после цветовой индикации */
-        .key.correct {
-            background: #538d4e;
-            color: white;
-        }
-        .key.present {
-            background: #b59f3b;
-            color: white;
-        }
-        .key.absent {
-            background: #3a3a3c;
-            color: #aaa;
+        .reset-btn:hover {
+            background: linear-gradient(135deg, #fb7185, #be123c);
+            border-color: transparent;
+            box-shadow: 0 10px 20px rgba(225, 29, 72, 0.4);
         }
 
-        .info-panel {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 20px;
-            gap: 12px;
-            padding: 0 8px;
+        /* Анимация пульсации */
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: inset 0 0 20px rgba(0,0,0,0.2); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(255,255,255,0.2), inset 0 0 20px rgba(0,0,0,0.2); }
+            100% { transform: scale(1); box-shadow: inset 0 0 20px rgba(0,0,0,0.2); }
         }
-        .message {
-            background: #1b1e2a;
-            padding: 10px 16px;
-            border-radius: 60px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: #d6e6ff;
-            flex: 1;
-            text-align: center;
-            letter-spacing: 0.3px;
-        }
-        .new-game {
-            background: #4b6e8a;
-            border: none;
-            border-radius: 40px;
-            padding: 10px 22px;
-            font-weight: bold;
-            font-size: 0.9rem;
-            color: white;
-            cursor: pointer;
-            transition: 0.15s;
-            box-shadow: 0 2px 4px black;
-        }
-        .new-game:active {
-            transform: scale(0.96);
-            background: #2d4f6e;
-        }
-
-        @media (max-width: 550px) {
-            .tile {
-                width: 52px;
-                height: 52px;
-                font-size: 1.7rem;
-                border-radius: 12px;
-            }
-            .key {
-                min-width: 35px;
-                padding: 8px 6px;
-                font-size: 1rem;
-            }
-            .key.special {
-                min-width: 55px;
-            }
-            .kb-row {
-                gap: 5px;
-            }
-            .row {
-                gap: 8px;
-            }
-            h1 {
-                font-size: 1.7rem;
-            }
-        }
-
-        @media (max-width: 450px) {
-            .tile {
-                width: 44px;
-                height: 44px;
-                font-size: 1.4rem;
-            }
-            .key {
-                min-width: 30px;
-                padding: 6px 5px;
-                font-size: 0.85rem;
-            }
+        .choice-icon.pulse {
+            animation: pulse 0.3s ease-in-out 2;
         }
 
         footer {
             text-align: center;
-            font-size: 0.7rem;
-            color: #525b73;
-            margin-top: 20px;
+            font-size: 0.8rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            color: rgba(148, 163, 184, 0.6);
+            border-top: 1px solid var(--glass-border);
         }
-        button {
-            font-family: inherit;
+
+        /* ===== Адаптивность ===== */
+        @media (max-width: 600px) {
+            .game-card { padding: 1.5rem; }
+            .game-header h1 { font-size: 2rem; }
+            .game-arena { gap: 1rem; }
+            .choice-icon { width: 100px; height: 100px; font-size: 3.5rem; border-radius: 1.5rem; }
+            .score-card { min-width: 110px; padding: 0.8rem 1rem; }
+            .score-value { font-size: 2.5rem; }
+            .game-btn { min-width: 100px; padding: 0.8rem; }
+            .game-btn span:first-child { font-size: 1.8rem; }
         }
     </style>
 </head>
 <body>
-<div class="game-wrapper">
-    <h1>🎯 ВОРДЛИ</h1>
-    <div class="sub">угадай слово за 6 попыток</div>
 
-    <!-- игровая сетка 6x5 -->
-    <div class="board" id="gameBoard"></div>
-
-    <!-- экранная клавиатура -->
-    <div class="keyboard" id="keyboardContainer"></div>
-
-    <div class="info-panel">
-        <div class="message" id="statusMessage">⭐ Введи 5-буквенное слово</div>
-        <button class="new-game" id="resetGameBtn">🔄 Новая игра</button>
+<div class="game-card">
+    <div class="header-actions">
+        <!-- Ссылка на главное меню (название файла укажите ваше) -->
+        <a href="index.html" class="back-button">← В меню</a>
     </div>
-    <footer>⌨️ клавиатура ПК / экранные кнопки • каждая попытка даёт подсказку</footer>
+
+    <div class="game-header">
+        <h1><span>✊</span> Камень ✂️ Бумага <span>✋</span></h1>
+        <div class="sub">Игра против компьютера | Кто первый до 5 побед?</div>
+    </div>
+
+    <div class="scoreboard">
+        <div class="score-card" id="player-card">
+            <div class="score-label">Игрок</div>
+            <div class="score-value" id="player-score">0</div>
+        </div>
+        <div class="versus-badge">VS</div>
+        <div class="score-card" id="computer-card">
+            <div class="score-label">ИИ</div>
+            <div class="score-value" id="computer-score">0</div>
+        </div>
+    </div>
+
+    <div class="game-arena">
+        <div class="choice-panel">
+            <div class="choice-label">Твой выбор</div>
+            <div class="choice-icon" id="player-choice-icon">
+                <span>❓</span>
+            </div>
+        </div>
+        <div class="choice-panel">
+            <div class="choice-label">Выбор ИИ</div>
+            <div class="choice-icon" id="computer-choice-icon">
+                <span>❓</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="result-area" id="result-message">
+        <div class="round-result">⚡ Нажми на кнопку, чтобы начать!</div>
+    </div>
+
+    <div class="action-buttons">
+        <button class="game-btn" data-move="rock">
+            <span>✊</span><span>Камень</span>
+        </button>
+        <button class="game-btn" data-move="scissors">
+            <span>✌️</span><span>Ножницы</span>
+        </button>
+        <button class="game-btn" data-move="paper">
+            <span>✋</span><span>Бумага</span>
+        </button>
+        <button class="game-btn reset-btn" id="reset-game">
+            <span>🔄</span><span>Сброс</span>
+        </button>
+    </div>
+
+    <footer>Правила: Камень ломает ножницы, Ножницы режут бумагу, Бумага кроет камень.</footer>
 </div>
 
 <script>
-    // -------------------- СЛОВАРЬ (5-буквенные слова) --------------------
-    const VALID_WORDS = [
-        "APPLE", "HOUSE", "MONEY", "WORLD", "HEART", "MIGHT", "PLANE", "OCEAN",
-        "BRING", "PAINT", "CLOUD", "SMILE", "DREAM", "FRUIT", "GREEN", "LIGHT",
-        "NIGHT", "MUSIC", "PEACE", "HAPPY", "STONE", "WATER", "EARTH", "FIRE",
-        "BREAD", "TABLE", "CHAIR", "HORSE", "MOUSE", "PLANT", "SOUND", "PRICE",
-        "MATCH", "FRAME", "BIRTH", "GHOST", "CRANE", "SLATE", "REACT", "HONEY",
-        "FLAME", "SPACE", "TRUST", "FRESH", "BLACK", "WHITE", "BROWN", "MAGIC"
-    ];
-    
-    // -------------------- ГЛОБАЛЬНОЕ СОСТОЯНИЕ --------------------
-    let targetWord = "";          // загаданное слово (uppercase)
-    let currentGuess = "";        // текущий ввод (строка до 5 букв)
-    let currentRow = 0;           // какая строка заполняется сейчас (0..5)
-    let gameWon = false;
-    let gameLost = false;
-    
-    // массив для хранения результатов каждой строки: [ { guess: string, statuses: [] } , ... ]
-    let evaluatedRows = [];       
-    
-    // DOM элементы
-    let boardContainer;
-    let messageDiv;
-    let keyboardContainer;
-    
-    // вспомогательные переменные для динамической отрисовки
-    let tileElements = [];   // 2D массив [row][col] => HTMLElement
-    
-    // -------------------- ИНИЦИАЛИЗАЦИЯ / ОТРИСОВКА СЕТКИ --------------------
-    function buildGrid() {
-        boardContainer.innerHTML = "";
-        tileElements = [];
-        for (let r = 0; r < 6; r++) {
-            const rowDiv = document.createElement("div");
-            rowDiv.classList.add("row");
-            const rowTiles = [];
-            for (let c = 0; c < 5; c++) {
-                const tile = document.createElement("div");
-                tile.classList.add("tile");
-                tile.textContent = "";
-                rowDiv.appendChild(tile);
-                rowTiles.push(tile);
-            }
-            boardContainer.appendChild(rowDiv);
-            tileElements.push(rowTiles);
-        }
-    }
-    
-    // обновить визуальный ряд текущей строки (отобразить currentGuess)
-    function updateCurrentRowDisplay() {
-        if (currentRow >= 6) return;
-        const rowTiles = tileElements[currentRow];
-        for (let i = 0; i < 5; i++) {
-            const letter = currentGuess[i] || "";
-            rowTiles[i].textContent = letter;
-            // не сбрасываем цвета если строка еще не оценена (классы остаются старыми, но новые буквы)
-            // если строка уже была оценена - мы её не трогаем, но currentRow изменится.
-            // Однако во время ввода строка всегда "чистая" либо не имела классов оценки
-            // дополнительно подчистим классы, если они не должны висеть (для случая когда игра сброшена или начало)
-            if (!evaluatedRows[currentRow]) {
-                // убираем старые цветные классы, если вдруг они были (например при ресете)
-                rowTiles[i].classList.remove("correct", "present", "absent");
-            }
-        }
-    }
-    
-    // применить результаты оценки строки (раскрасить плитки)
-    function applyRowEvaluation(rowIndex, guess, statuses) {
-        const rowTiles = tileElements[rowIndex];
-        for (let i = 0; i < 5; i++) {
-            rowTiles[i].textContent = guess[i];
-            rowTiles[i].classList.remove("correct", "present", "absent");
-            if (statuses[i] === "correct") {
-                rowTiles[i].classList.add("correct");
-            } else if (statuses[i] === "present") {
-                rowTiles[i].classList.add("present");
-            } else {
-                rowTiles[i].classList.add("absent");
-            }
-        }
-    }
-    
-    // пересчитать цвета клавиатуры на основе всех оценённых строк
-    function updateKeyboardColors() {
-        // собираем для каждой буквы наилучший статус (correct > present > absent)
-        const letterBest = {};
-        for (let i = 0; i < evaluatedRows.length; i++) {
-            const row = evaluatedRows[i];
-            if (!row) continue;
-            const guess = row.guess;
-            const statuses = row.statuses;
-            for (let idx = 0; idx < 5; idx++) {
-                const letter = guess[idx];
-                const st = statuses[idx];
-                let priority = 0;
-                if (st === "correct") priority = 3;
-                else if (st === "present") priority = 2;
-                else if (st === "absent") priority = 1;
-                else continue;
-                
-                const currentPriority = letterBest[letter] ? (letterBest[letter].prio || 0) : 0;
-                if (priority > currentPriority) {
-                    letterBest[letter] = { status: st, prio: priority };
-                } else if (priority === currentPriority && letterBest[letter]) {
-                    // оставляем тот же
-                }
-            }
-        }
-        // обновляем все клавиши
-        const allKeys = document.querySelectorAll(".key:not(.special)");
-        allKeys.forEach(key => {
-            const letter = key.getAttribute("data-letter");
-            if (!letter) return;
-            const best = letterBest[letter];
-            key.classList.remove("correct", "present", "absent");
-            if (best) {
-                key.classList.add(best.status);
-            }
-        });
-    }
-    
-    // -------------------- ОСНОВНАЯ ЛОГИКА ОЦЕНКИ СЛОВА (Wordle classic)--------------------
-    function evaluateGuess(guess, target) {
-        // guess и target уже UPPERCASE, длины 5
-        const result = new Array(5).fill("absent");
-        const targetArr = target.split('');
-        const guessArr = guess.split('');
-        
-        // Шаг 1: отметить точные совпадения (correct)
-        for (let i = 0; i < 5; i++) {
-            if (guessArr[i] === targetArr[i]) {
-                result[i] = "correct";
-                targetArr[i] = null;   // помечаем как использованную
-                guessArr[i] = null;
-            }
-        }
-        // Шаг 2: отметить присутствующие но не на своих местах (present)
-        for (let i = 0; i < 5; i++) {
-            if (guessArr[i] === null) continue;
-            const foundIndex = targetArr.indexOf(guessArr[i]);
-            if (foundIndex !== -1) {
-                result[i] = "present";
-                targetArr[foundIndex] = null;
-            }
-        }
-        return result;
-    }
-    
-    // проверка победы: все статусы "correct"
-    function isWin(statuses) {
-        return statuses.every(st => st === "correct");
-    }
-    
-    // обработка сабмита (отправка текущего слова)
-    function submitGuess() {
-        if (gameWon || gameLost) {
-            setMessage(`🎲 Игра завершена! Нажми "Новая игра".`);
-            return;
-        }
-        if (currentGuess.length !== 5) {
-            setMessage(`❗ Не хватает букв (нужно 5)`);
-            return;
-        }
-        const guessUpper = currentGuess.toUpperCase();
-        if (!VALID_WORDS.includes(guessUpper)) {
-            setMessage(`❌ "${guessUpper}" нет в списке слов!`);
-            return;
-        }
-        
-        // проверяем, не была ли уже заполнена эта строка (защита)
-        if (evaluatedRows[currentRow]) {
-            setMessage(`🚫 Эта строка уже использована`);
-            return;
-        }
-        
-        // оцениваем
-        const statuses = evaluateGuess(guessUpper, targetWord);
-        const isGameWon = isWin(statuses);
-        
-        // сохраняем результат строки
-        evaluatedRows[currentRow] = { guess: guessUpper, statuses: statuses };
-        applyRowEvaluation(currentRow, guessUpper, statuses);
-        
-        // обновляем клавиатуру на основе всех оценок
-        updateKeyboardColors();
-        
-        // проверка победы
-        if (isGameWon) {
-            gameWon = true;
-            setMessage(`🎉 ПОБЕДА! Слово — ${targetWord}. Поздравляю! 🎉`);
-            return;
-        }
-        
-        // переход на следующую строку
-        currentRow++;
-        currentGuess = "";
-        
-        // проверка поражения (после увеличения currentRow, если currentRow === 6 -> 6 попыток исчерпано)
-        if (currentRow === 6) {
-            gameLost = true;
-            setMessage(`😔 Проигрыш! Загаданное слово: ${targetWord}. Попробуй ещё.`);
-            // обновить отображение последней строки (все равно чисто)
-        } else {
-            // обновляем отображение новой строки (очищаем)
-            updateCurrentRowDisplay();
-            setMessage(`📝 Попытка ${currentRow+1}/6. Введи слово.`);
-        }
-        
-        // если игра окончена, клавиатура всё ещё видна, но ввод блокируется через gameWon/gameLost флаги
-        if (gameLost || gameWon) return;
-    }
-    
-    // добавление буквы
-    function addLetter(letter) {
-        if (gameWon || gameLost) return;
-        if (currentGuess.length < 5) {
-            currentGuess += letter.toUpperCase();
-            updateCurrentRowDisplay();
-        }
-        if (currentGuess.length === 5) {
-            setMessage("✅ Нажми ⏎, чтобы проверить");
-        } else {
-            setMessage(`📝 Введи слово (${currentGuess.length}/5)`);
-        }
-    }
-    
-    function deleteLetter() {
-        if (gameWon || gameLost) return;
-        if (currentGuess.length > 0) {
-            currentGuess = currentGuess.slice(0, -1);
-            updateCurrentRowDisplay();
-            setMessage(`✏️ ${currentGuess.length}/5 букв`);
-        }
-    }
-    
-    function setMessage(msg) {
-        if (messageDiv) messageDiv.textContent = msg;
-    }
-    
-    // -------------------- СБРОС ИГРЫ (новая игра) --------------------
-    function resetGame() {
-        // выбираем новое случайное слово из словаря
-        const randomIndex = Math.floor(Math.random() * VALID_WORDS.length);
-        targetWord = VALID_WORDS[randomIndex];
-        console.log(`[DEV] новое слово: ${targetWord}`); // для отладки, но в продакшене не мешает
-        
-        currentGuess = "";
-        currentRow = 0;
-        gameWon = false;
-        gameLost = false;
-        evaluatedRows = [];
-        
-        // перестраиваем визуально сетку (чистые плитки)
-        for (let r = 0; r < 6; r++) {
-            for (let c = 0; c < 5; c++) {
-                tileElements[r][c].textContent = "";
-                tileElements[r][c].classList.remove("correct", "present", "absent");
-            }
-        }
-        // сброс клавиатурных цветов
-        const allKeys = document.querySelectorAll(".key");
-        allKeys.forEach(key => {
-            key.classList.remove("correct", "present", "absent");
-        });
-        
-        setMessage(`🎯 Новая игра! Слово из 5 букв. Попытка 1/6`);
-    }
-    
-    // -------------------- ПОСТРОЕНИЕ КЛАВИАТУРЫ --------------------
-    function buildKeyboard() {
-        keyboardContainer.innerHTML = "";
-        const rowsLayout = [
-            ["Й", "Ц", "У", "К", "Е", "Н", "Г", "Ш", "Щ", "З", "Х", "Ъ"],
-            ["Ф", "Ы", "В", "А", "П", "Р", "О", "Л", "Д", "Ж", "Э"],
-            ["Я", "Ч", "С", "М", "И", "Т", "Ь", "Б", "Ю", "←", "ENTER"]
-        ];
-        
-        // но в российском вордли удобно использовать английскую раскладку? Обычно вордли на русском, но словарь у нас английский.
-        // Чтобы игра была интуитивной, лучше дать английские буквы QWERTY, так как словарь на английском.
-        // Поменяем на английскую клавиатуру (стандарт Wordle) чтобы легче вводить.
-        // Но пользователю удобнее? русские буквы не подойдут (словарь английский). Сделаем английскую QWERTY.
-        const engLayout = [
-            ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
-            ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
-            ["ENTER", "Z", "X", "C", "V", "B", "N", "M", "⌫"]
-        ];
-        
-        for (let i = 0; i < engLayout.length; i++) {
-            const rowDiv = document.createElement("div");
-            rowDiv.classList.add("kb-row");
-            for (let btn of engLayout[i]) {
-                const button = document.createElement("button");
-                let displayText = btn;
-                let isSpecial = (btn === "ENTER" || btn === "⌫");
-                button.classList.add("key");
-                if (isSpecial) button.classList.add("special");
-                
-                if (btn === "ENTER") {
-                    button.textContent = "⏎";
-                    button.setAttribute("data-action", "enter");
-                    button.addEventListener("click", () => submitGuess());
-                } 
-                else if (btn === "⌫") {
-                    button.textContent = "⌫";
-                    button.setAttribute("data-action", "backspace");
-                    button.addEventListener("click", () => deleteLetter());
-                }
-                else {
-                    button.textContent = btn;
-                    button.setAttribute("data-letter", btn);
-                    button.addEventListener("click", () => addLetter(btn));
-                }
-                rowDiv.appendChild(button);
-            }
-            keyboardContainer.appendChild(rowDiv);
-        }
-    }
-    
-    // -------------------- ФИЗИЧЕСКАЯ КЛАВИАТУРА --------------------
-    function handlePhysicalKeyboard(e) {
-        if (gameWon || gameLost) {
-            // разрешаем только клавишу новой игры? но и так будут игнор
-            if (e.key === "Enter") {
-                e.preventDefault();
-                setMessage(`Игра завершена, нажмите "Новая игра"`);
-            }
-            return;
-        }
-        const key = e.key;
-        if (key === "Enter") {
-            e.preventDefault();
-            submitGuess();
-        } 
-        else if (key === "Backspace") {
-            e.preventDefault();
-            deleteLetter();
-        }
-        else {
-            // буква a-z или A-Z
-            const letterMatch = key.match(/^[a-zA-Z]$/);
-            if (letterMatch) {
-                e.preventDefault();
-                let letter = key.toUpperCase();
-                // допустимые буквы английского алфавита
-                if (/[A-Z]/.test(letter) && letter.length === 1) {
-                    addLetter(letter);
-                }
-            }
-        }
-    }
-    
-    // -------------------- ИНИЦИАЛИЗАЦИЯ --------------------
-    function initGame() {
-        boardContainer = document.getElementById("gameBoard");
-        messageDiv = document.getElementById("statusMessage");
-        keyboardContainer = document.getElementById("keyboardContainer");
-        
-        buildGrid();
-        buildKeyboard();
-        
-        // выбор случайного слова
-        const randomIndex = Math.floor(Math.random() * VALID_WORDS.length);
-        targetWord = VALID_WORDS[randomIndex];
-        console.log(`🎯 target word: ${targetWord}`);   // Подсказка для отладки (можно скрыть, но в консоли видно)
-        
-        currentGuess = "";
-        currentRow = 0;
-        gameWon = false;
-        gameLost = false;
-        evaluatedRows = [];
-        
-        // очистка плиток и классов
-        for (let r = 0; r < 6; r++) {
-            for (let c = 0; c < 5; c++) {
-                tileElements[r][c].textContent = "";
-                tileElements[r][c].classList.remove("correct", "present", "absent");
-            }
-        }
-        setMessage(`🎯 Попробуй угадать! Попытка 1/6`);
-        
-        // Сброс клавиатурных цветов
-        const allKeys = document.querySelectorAll(".key");
-        allKeys.forEach(k => k.classList.remove("correct", "present", "absent"));
-        
-        // событие клавиатуры
-        window.removeEventListener("keydown", handlePhysicalKeyboard);
-        window.addEventListener("keydown", handlePhysicalKeyboard);
-        
-        // кнопка новой игры
-        const resetBtn = document.getElementById("resetGameBtn");
-        if (resetBtn) {
-            resetBtn.removeEventListener("click", resetGame);
-            resetBtn.addEventListener("click", () => {
-                resetGame();
-            });
-        }
-    }
-    
-    // дополнительно, если resetGame переопределен глобально, нужно чтобы он корректно сбрасывал все массивы и UI.
-    // переопределим resetGame с полной перезагрузкой игровой логики и отрисовкой.
-    window.resetGame = function() {
-        const randomIdx = Math.floor(Math.random() * VALID_WORDS.length);
-        targetWord = VALID_WORDS[randomIdx];
-        currentGuess = "";
-        currentRow = 0;
-        gameWon = false;
-        gameLost = false;
-        evaluatedRows = [];
-        
-        for (let r = 0; r < 6; r++) {
-            for (let c = 0; c < 5; c++) {
-                tileElements[r][c].textContent = "";
-                tileElements[r][c].classList.remove("correct", "present", "absent");
-            }
-        }
-        const allKeys = document.querySelectorAll(".key");
-        allKeys.forEach(k => k.classList.remove("correct", "present", "absent"));
-        setMessage(`✨ Новая игра! Слово из 5 букв. Попытка 1/6`);
+    // Эмодзи и текстовые представления
+    const movesMap = {
+        rock: { name: "Камень", emoji: "✊", beats: "scissors" },
+        scissors: { name: "Ножницы", emoji: "✌️", beats: "paper" },
+        paper: { name: "Бумага", emoji: "✋", beats: "rock" }
     };
-    
-    // финальный запуск
-    initGame();
+
+    const moveOrder = ["rock", "scissors", "paper"];
+
+    // DOM элементы
+    const playerScoreSpan = document.getElementById("player-score");
+    const computerScoreSpan = document.getElementById("computer-score");
+    const playerChoiceIconDiv = document.getElementById("player-choice-icon");
+    const computerChoiceIconDiv = document.getElementById("computer-choice-icon");
+    const resultMessageDiv = document.getElementById("result-message");
+
+    let playerScore = 0;
+    let computerScore = 0;
+    let isProcessing = false; // защита от спама во время анимации
+
+    // Обновление интерфейса счета
+    function updateScoreUI() {
+        playerScoreSpan.innerText = playerScore;
+        computerScoreSpan.innerText = computerScore;
+    }
+
+    // Случайный ход компьютера
+    function getComputerMove() {
+        const randomIndex = Math.floor(Math.random() * moveOrder.length);
+        return moveOrder[randomIndex];
+    }
+
+    // Определение победителя
+    function determineWinner(playerMove, computerMove) {
+        if (playerMove === computerMove) return 'draw';
+        if (movesMap[playerMove].beats === computerMove) return 'player';
+        return 'computer';
+    }
+
+    // Анимация пульсации
+    function animateChoice(element) {
+        if (!element) return;
+        element.classList.remove('pulse');
+        void element.offsetWidth; // Триггер рефлоу для перезапуска анимации
+        element.classList.add('pulse');
+    }
+
+    // Основная логика раунда
+    async function playRound(playerMove) {
+        if (isProcessing) {
+            updateResultDisplay("⏳ Подожди, идет ход...", "draw");
+            setTimeout(() => {
+                if (resultMessageDiv.innerText.includes("Подожди")) updateResultDisplay("🎲 Сделай ход!", "");
+            }, 800);
+            return;
+        }
+
+        isProcessing = true;
+        const computerMove = getComputerMove();
+
+        // Эффект "обдумывания"
+        computerChoiceIconDiv.innerHTML = `<span>🤔</span>`;
+        playerChoiceIconDiv.innerHTML = `<span>${movesMap[playerMove].emoji}</span>`;
+        animateChoice(playerChoiceIconDiv);
+
+        // Задержка для реализма
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        computerChoiceIconDiv.innerHTML = `<span>${movesMap[computerMove].emoji}</span>`;
+        animateChoice(computerChoiceIconDiv);
+
+        const winner = determineWinner(playerMove, computerMove);
+        let resultText = "";
+
+        if (winner === 'player') {
+            playerScore++;
+            resultText = `🥳 Вы победили! ${movesMap[playerMove].name} ${getVerb(playerMove, computerMove)} ${movesMap[computerMove].name.toLowerCase()}.`;
+        } else if (winner === 'computer') {
+            computerScore++;
+            resultText = `😵 ИИ победил! ${movesMap[computerMove].name} ${getVerb(computerMove, playerMove)} ${movesMap[playerMove].name.toLowerCase()}.`;
+        } else {
+            resultText = `🤝 Ничья! Оба выбрали ${movesMap[playerMove].name.toLowerCase()}.`;
+        }
+
+        updateScoreUI();
+        updateResultDisplay(resultText, winner);
+
+        // Проверка на окончание матча (до 5 побед)
+        if (playerScore >= 5 || computerScore >= 5) {
+            let gameWinner = playerScore >= 5 ? "ИГРОК" : "ИИ";
+            let celebrationMsg = playerScore >= 5 ? "🏆 ВЫ ВЫИГРАЛИ МАТЧ!" : "💀 КОМПЬЮТЕР ВЫИГРАЛ МАТЧ!";
+            updateResultDisplay(`${celebrationMsg} Финал ${playerScore}:${computerScore}. Жми «Сброс»`, winner);
+            disableGameButtons(true);
+            return;
+        }
+
+        isProcessing = false;
+    }
+
+    // Вспомогательный глагол
+    function getVerb(winnerMove, loserMove) {
+        if (winnerMove === 'rock' && loserMove === 'scissors') return "ломает";
+        if (winnerMove === 'scissors' && loserMove === 'paper') return "режут";
+        if (winnerMove === 'paper' && loserMove === 'rock') return "кроет";
+        return "побеждает";
+    }
+
+    // Обновить панель результата с добавлением классов состояний (win/lose/draw)
+    function updateResultDisplay(message, winnerType = "") {
+        let stateClass = "";
+        if (winnerType === 'player') stateClass = "win";
+        else if (winnerType === 'computer') stateClass = "lose";
+        else if (winnerType === 'draw') stateClass = "draw";
+
+        resultMessageDiv.innerHTML = `<div class="round-result ${stateClass}">${message}</div>`;
+    }
+
+    // Отключение кнопок при конце матча
+    function disableGameButtons(disabled) {
+        const btns = document.querySelectorAll('.game-btn[data-move]');
+        btns.forEach(btn => {
+            if (disabled) {
+                btn.style.opacity = "0.5";
+                btn.style.pointerEvents = "none";
+                btn.style.filter = "grayscale(100%)";
+            } else {
+                btn.style.opacity = "1";
+                btn.style.pointerEvents = "auto";
+                btn.style.filter = "none";
+            }
+        });
+    }
+
+    // Сброс
+    function resetGame() {
+        playerScore = 0;
+        computerScore = 0;
+        updateScoreUI();
+
+        playerChoiceIconDiv.innerHTML = `<span>❓</span>`;
+        computerChoiceIconDiv.innerHTML = `<span>❓</span>`;
+        updateResultDisplay("✨ Счёт сброшен! Сделай ход ✨", "");
+        
+        disableGameButtons(false);
+        isProcessing = false;
+    }
+
+    // Привязка событий
+    function bindEvents() {
+        document.querySelector('[data-move="rock"]').addEventListener("click", () => playRound("rock"));
+        document.querySelector('[data-move="scissors"]').addEventListener("click", () => playRound("scissors"));
+        document.querySelector('[data-move="paper"]').addEventListener("click", () => playRound("paper"));
+        document.getElementById("reset-game").addEventListener("click", resetGame);
+    }
+
+    // Инициализация
+    window.addEventListener("DOMContentLoaded", () => {
+        bindEvents();
+        resetGame();
+    });
 </script>
 </body>
 </html>
