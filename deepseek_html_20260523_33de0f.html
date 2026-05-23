@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Крестики-нолики</title>
+    <style>
+        :root {
+            --bg: #1a1a2e;
+            --surface: #16213e;
+            --cell-bg: #0f3460;
+            --cell-hover: #1a4a7a;
+            --x-color: #e94560;
+            --o-color: #4ecdc4;
+            --text: #eee;
+            --text-secondary: #aaa;
+            --win-highlight: #ffd700;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --btn-bg: #533483;
+            --btn-hover: #6a44b2;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: var(--bg);
+            background: radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a15 100%);
+            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+        }
+
+        /* Floating particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            animation: floatUp linear infinite;
+        }
+        @keyframes floatUp {
+            0% {
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .game-wrapper {
+            position: relative;
+            z-index: 1;
+            background: var(--surface);
+            border-radius: 28px;
+            padding: 40px 35px 30px;
+            box-shadow: var(--shadow), 0 0 80px rgba(78, 205, 196, 0.08);
+            text-align: center;
+            max-width: 440px;
+            width: 95%;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(4px);
+            animation: fadeInUp 0.6s ease-out;
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, var(--x-color), #f07b8a, var(--o-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        /* Scoreboard */
+        .scoreboard {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 18px;
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .scoreboard span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.3s;
+        }
+        .scoreboard .score-x {
+            color: var(--x-color);
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        .scoreboard .score-o {
+            color: var(--o-color);
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        .scoreboard .score-draw {
+            color: #ffd700;
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        .active-indicator {
+            box-shadow: 0 0 20px currentColor;
+            border: 1px solid currentColor !important;
+        }
+
+        /* Status */
+        .status {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 22px;
+            color: var(--text);
+            min-height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        .status .current-icon {
+            display: inline-block;
+            font-weight: 800;
+            font-size: 1.5rem;
+            animation: pulse 0.8s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%,
+            100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.25);
+            }
+        }
+        .status.win {
+            color: var(--win-highlight);
+            font-size: 1.3rem;
+            animation: bounceIn 0.5s ease;
+        }
+        .status.draw {
+            color: #ffb347;
+            animation: bounceIn 0.5s ease;
+        }
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0.7);
+                opacity: 0;
+            }
+            60% {
+                transform: scale(1.08);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Grid */
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 320px;
+            margin: 0 auto 24px;
+            aspect-ratio: 1 / 1;
+        }
+        .cell {
+            background: var(--cell-bg);
+            border-radius: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            border: 2px solid transparent;
+            aspect-ratio: 1 / 1;
+        }
+        .cell:hover:not(.taken) {
+            background: var(--cell-hover);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        .cell:active:not(.taken) {
+            transform: scale(0.94);
+            transition: transform 0.1s;
+        }
+        .cell.taken {
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .cell.x-mark {
+            color: var(--x-color);
+            text-shadow: 0 0 20px rgba(233, 68, 96, 0.5);
+        }
+        .cell.o-mark {
+            color: var(--o-color);
+            text-shadow: 0 0 20px rgba(78, 205, 196, 0.5);
+        }
+        .cell.win-cell {
+            animation: winGlow 0.7s ease-in-out infinite alternate;
+            border-color: var(--win-highlight) !important;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.6) !important;
+            transform: scale(1.05);
+            z-index: 2;
+        }
+        @keyframes winGlow {
+            from {
+                box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+            }
+            to {
+                box-shadow: 0 0 35px rgba(255, 215, 0, 0.8), 0 0 60px rgba(255, 215, 0, 0.3);
+            }
+        }
+        .cell.pop-in {
+            animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            70% {
+                transform: scale(1.15);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Buttons */
+        .btn-reset {
+            background: var(--btn-bg);
+            color: #fff;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 6px 18px rgba(83, 52, 131, 0.35);
+            text-transform: uppercase;
+        }
+        .btn-reset:hover {
+            background: var(--btn-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(83, 52, 131, 0.5);
+        }
+        .btn-reset:active {
+            transform: scale(0.95);
+            transition: transform 0.1s;
+        }
+
+        /* Confetti on win */
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+        .confetti-piece {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            animation: confettiFall linear forwards;
+        }
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-100px) rotate(0deg) scale(1);
+                opacity: 1;
+            }
+            80% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(105vh) rotate(720deg) scale(0.3);
+                opacity: 0;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 460px) {
+            .game-wrapper {
+                padding: 25px 18px 22px;
+                border-radius: 22px;
+            }
+            .game-title {
+                font-size: 1.8rem;
+            }
+            .board {
+                gap: 7px;
+                max-width: 260px;
+            }
+            .cell {
+                font-size: 2.4rem;
+                border-radius: 12px;
+            }
+            .scoreboard {
+                gap: 14px;
+                font-size: 0.85rem;
+            }
+            .scoreboard span {
+                padding: 6px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Floating particles -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Confetti container -->
+    <div class="confetti-container" id="confettiContainer"></div>
+
+    <!-- Game -->
+    <div class="game-wrapper">
+        <h1 class="game-title">КРЕСТИКИ-НОЛИКИ</h1>
+
+        <!-- Scoreboard -->
+        <div class="scoreboard">
+            <span id="scoreX">❌ <span class="score-x" id="scoreXVal">0</span></span>
+            <span id="scoreDraw">🤝 <span class="score-draw" id="scoreDrawVal">0</span></span>
+            <span id="scoreO"><span class="score-o" id="scoreOVal">0</span> ⭕</span>
+        </div>
+
+        <!-- Status -->
+        <div class="status" id="status">
+            Ход: <span class="current-icon" style="color: var(--x-color);">❌</span>
+        </div>
+
+        <!-- Board -->
+        <div class="board" id="board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+
+        <!-- Reset button -->
+        <button class="btn-reset" id="btnReset">🔄 Новая игра</button>
+    </div>
+
+    <script>
+        (function() {
+            // --- DOM elements ---
+            const boardEl = document.getElementById('board');
+            const cells = boardEl.querySelectorAll('.cell');
+            const statusEl = document.getElementById('status');
+            const scoreXEl = document.getElementById('scoreXVal');
+            const scoreOEl = document.getElementById('scoreOVal');
+            const scoreDrawEl = document.getElementById('scoreDrawVal');
+            const scoreXSpan = document.getElementById('scoreX');
+            const scoreOSpan = document.getElementById('scoreO');
+            const scoreDrawSpan = document.getElementById('scoreDraw');
+            const btnReset = document.getElementById('btnReset');
+            const confettiContainer = document.getElementById('confettiContainer');
+            const particlesContainer = document.getElementById('particles');
+
+            // --- State ---
+            let board = Array(9).fill(null); // 'X' or 'O' or null
+            let currentPlayer = 'X';
+            let gameOver = false;
+            let winningCombo = null; // stores indices of winning cells
+            let scores = { X: 0, O: 0, draw: 0 };
+
+            // All possible winning combinations (8)
+            const winCombos = [
+                [0, 1, 2],
+                [3, 4, 5],
+                [6, 7, 8], // rows
+                [0, 3, 6],
+                [1, 4, 7],
+                [2, 5, 8], // columns
+                [0, 4, 8],
+                [2, 4, 6] // diagonals
+            ];
+
+            // --- Create floating background particles ---
+            function createParticles() {
+                particlesContainer.innerHTML = '';
+                for (let i = 0; i < 30; i++) {
+                    const particle = document.createElement('div');
+                    particle.classList.add('particle');
+                    const size = Math.random() * 6 + 3;
+                    particle.style.width = size + 'px';
+                    particle.style.height = size + 'px';
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.animationDuration = Math.random() * 12 + 8 + 's';
+                    particle.style.animationDelay = Math.random() * 8 + 's';
+                    particle.style.background =
+                        `rgba(${200 + Math.random()*55}, ${200 + Math.random()*55}, ${220 + Math.random()*35}, ${Math.random() * 0.06 + 0.02})`;
+                    particlesContainer.appendChild(particle);
+                }
+            }
+            createParticles();
+
+            // --- Confetti ---
+            function spawnConfetti() {
+                const colors = [
+                    '#e94560', '#4ecdc4', '#ffd700', '#ff6b6b',
+                    '#48dbfb', '#feca57', '#ff9ff3', '#54a0ff',
+                    '#5f27cd', '#01a3a4', '#f368e0', '#ff6348'
+                ];
+                const count = 80;
+                const fragment = document.createDocumentFragment();
+                for (let i = 0; i < count; i++) {
+                    const piece = document.createElement('div');
+                    piece.classList.add('confetti-piece');
+                    piece.style.left = Math.random() * 100 + '%';
+                    piece.style.top = -(Math.random() * 60 + 10) + 'px';
+                    piece.style.width = (Math.random() * 10 + 6) + 'px';
+                    piece.style.height = (Math.random() * 14 + 6) + 'px';
+                    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    piece.style.animationDuration = (Math.random() * 2 + 2.5) + 's';
+                    piece.style.animationDelay = Math.random() * 1.2 + 's';
+                    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                    fragment.appendChild(piece);
+                }
+                confettiContainer.appendChild(fragment);
+
+                // Clean up confetti after animation
+                setTimeout(() => {
+                    confettiContainer.innerHTML = '';
+                }, 4000);
+            }
+
+            // --- Update UI ---
+            function updateBoardUI() {
+                cells.forEach((cell, index) => {
+                    // Clear classes
+                    cell.classList.remove('x-mark', 'o-mark', 'taken', 'win-cell', 'pop-in');
+                    cell.textContent = '';
+
+                    if (board[index] === 'X') {
+                        cell.textContent = '✕';
+                        cell.classList.add('x-mark', 'taken');
+                    } else if (board[index] === 'O') {
+                        cell.textContent = '◯';
+                        cell.classList.add('o-mark', 'taken');
+                    }
+                });
+
+                // Highlight winning combo
+                if (winningCombo) {
+                    winningCombo.forEach(idx => {
+                        cells[idx].classList.add('win-cell');
+                    });
+                }
+            }
+
+            function updateStatus() {
+                // Remove old indicator highlights
+                scoreXSpan.classList.remove('active-indicator');
+                scoreOSpan.classList.remove('active-indicator');
+                scoreDrawSpan.classList.remove('active-indicator');
+
+                if (gameOver) {
+                    if (winningCombo) {
+                        const winner = board[winningCombo[0]];
+                        statusEl.innerHTML = `🏆 Победил: <span style="color:${winner === 'X' ? 'var(--x-color)' : 'var(--o-color)'}; font-weight:800;">${winner === 'X' ? '❌ Крестики' : '⭕ Нолики'}</span>`;
+                        statusEl.classList.add('win');
+                        statusEl.classList.remove('draw');
+                        if (winner === 'X') scoreXSpan.classList.add('active-indicator');
+                        else scoreOSpan.classList.add('active-indicator');
+                    } else {
+                        statusEl.innerHTML = '🤝 Ничья!';
+                        statusEl.classList.add('draw');
+                        statusEl.classList.remove('win');
+                        scoreDrawSpan.classList.add('active-indicator');
+                    }
+                } else {
+                    statusEl.innerHTML =
+                        `Ход: <span class="current-icon" style="color:${currentPlayer === 'X' ? 'var(--x-color)' : 'var(--o-color)'};">${currentPlayer === 'X' ? '❌' : '⭕'}</span>`;
+                    statusEl.classList.remove('win', 'draw');
+                    if (currentPlayer === 'X') scoreXSpan.classList.add('active-indicator');
+                    else scoreOSpan.classList.add('active-indicator');
+                }
+
+                // Update score numbers
+                scoreXEl.textContent = scores.X;
+                scoreOEl.textContent = scores.O;
+                scoreDrawEl.textContent = scores.draw;
+            }
+
+            // --- Game logic ---
+            function checkWinner(brd) {
+                for (const combo of winCombos) {
+                    const [a, b, c] = combo;
+                    if (brd[a] && brd[a] === brd[b] && brd[a] === brd[c]) {
+                        return combo; // return winning combination
+                    }
+                }
+                return null;
+            }
+
+            function isBoardFull(brd) {
+                return brd.every(cell => cell !== null);
+            }
+
+            function handleMove(index) {
+                if (gameOver) return;
+                if (board[index] !== null) return;
+
+                // Make move
+                board[index] = currentPlayer;
+                const movedCell = cells[index];
+
+                // Check result
+                const combo = checkWinner(board);
+                if (combo) {
+                    gameOver = true;
+                    winningCombo = combo;
+                    scores[currentPlayer]++;
+                    updateBoardUI();
+                    // Add pop-in to the last moved cell
+                    movedCell.classList.add('pop-in');
+                    updateStatus();
+                    spawnConfetti();
+                    return;
+                }
+
+                if (isBoardFull(board)) {
+                    gameOver = true;
+                    winningCombo = null;
+                    scores.draw++;
+                    updateBoardUI();
+                    movedCell.classList.add('pop-in');
+                    updateStatus();
+                    return;
+                }
+
+                // Switch player
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                updateBoardUI();
+                movedCell.classList.add('pop-in');
+                updateStatus();
+            }
+
+            function resetGame() {
+                board = Array(9).fill(null);
+                currentPlayer = 'X';
+                gameOver = false;
+                winningCombo = null;
+                updateBoardUI();
+                updateStatus();
+                // Remove pop-in from all cells
+                cells.forEach(c => c.classList.remove('pop-in'));
+            }
+
+            function resetAll() {
+                scores = { X: 0, O: 0, draw: 0 };
+                resetGame();
+            }
+
+            // --- Event listeners ---
+            boardEl.addEventListener('click', (e) => {
+                const cell = e.target.closest('.cell');
+                if (!cell) return;
+                const index = parseInt(cell.getAttribute('data-index'));
+                if (isNaN(index)) return;
+                handleMove(index);
+            });
+
+            // Keyboard support (1-9 on numpad or regular)
+            document.addEventListener('keydown', (e) => {
+                if (gameOver && e.key === 'r') {
+                    resetGame();
+                    return;
+                }
+                if (gameOver && e.key === 'R') {
+                    resetAll();
+                    return;
+                }
+                const keyMap = {
+                    '1': 6,
+                    '2': 7,
+                    '3': 8,
+                    '4': 3,
+                    '5': 4,
+                    '6': 5,
+                    '7': 0,
+                    '8': 1,
+                    '9': 2
+                };
+                // Numpad layout mimics grid: 7 8 9 / 4 5 6 / 1 2 3
+                if (keyMap[e.key] !== undefined) {
+                    e.preventDefault();
+                    handleMove(keyMap[e.key]);
+                }
+                // Also allow qwerty top row: q w e / a s d / z x c
+                const qwertyMap = {
+                    'q': 0,
+                    'w': 1,
+                    'e': 2,
+                    'a': 3,
+                    's': 4,
+                    'd': 5,
+                    'z': 6,
+                    'x': 7,
+                    'c': 8
+                };
+                if (qwertyMap[e.key] !== undefined) {
+                    e.preventDefault();
+                    handleMove(qwertyMap[e.key]);
+                }
+            });
+
+            btnReset.addEventListener('click', () => {
+                if (gameOver) {
+                    resetGame();
+                } else {
+                    // If game is in progress, do full reset
+                    resetAll();
+                }
+            });
+
+            // Double-click on reset to fully reset scores
+            btnReset.addEventListener('dblclick', (e) => {
+                e.preventDefault();
+                resetAll();
+            });
+
+            // --- Initial render ---
+            updateBoardUI();
+            updateStatus();
+
+            console.log('🎮 Крестики-нолики готовы!');
+            console.log('  🖱️ Кликай по клеткам или используй клавиатуру:');
+            console.log('     Q W E   |   7 8 9');
+            console.log('     A S D   |   4 5 6');
+            console.log('     Z X C   |   1 2 3');
+            console.log('  🔄 Кнопка "Новая игра" или клавиша R — сброс раунда');
+            console.log('  🔄 Двойной клик по кнопке — полный сброс счёта');
+        })();
+    </script>
+</body>
+</html>
